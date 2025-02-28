@@ -600,8 +600,7 @@ function addThinkingIndicator(workerName, id) {
     messageDiv.innerHTML = `<div class="message-header">${workerName}</div><p>Thinking...</p>`;
     chatLog.appendChild(messageDiv);
     scrollToBottom();
-    if (window.ErrorAnimations) {
-                if (window.ErrorAnimations) {
+            if (window.ErrorAnimations) {
             const workerKey = workerName.toLowerCase();
             ErrorAnimations.showThinkingTooHardAnimation(workerKey);
         }
@@ -1002,3 +1001,4 @@ function updateWorkerModel(workerKey, newModel) {
     function showCompletedStamp() { /* Implementation */ }
 
 });
+        
