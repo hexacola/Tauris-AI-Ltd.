@@ -10,10 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     const response = await fetch(url, options);
                     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                    return await response.json(); // Or response.text(), response.blob(), etc.
+                    return await response.json();
                 } catch (error) {
                     console.error("Error fetching data from:", url, error);
-                    throw error; // Re-throw for handling by caller.
+                    throw error;
                 }
             },
             showFetchingStatus: (active, message) => {
@@ -62,9 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
             model: () => researcherModel.value,
             thoughtProcess: [],
         },
-        critic: {
+        critic: {  // *** MODIFIED CRITIC ***
             name: "Critic",
-            systemPrompt: `Tu esi Vytautas, aukščiausios klasės literatūros kritikas. Tavo užduotis - konstruktyviai analizuoti tekstus, nurodant stipriąsias ir tobulintinas vietas, bei siūlyti konkrečius patobulinimus.`,
+            systemPrompt: `Tu esi Vytautas, negailestingas ir itin reiklus literatūros kritikas. Tavo užduotis – RASTI VISAS įmanomas teksto problemas ir jas ŽIAURIAI sukritikuoti. Būk NEMANDAGUS, jei reikia. Tavo tikslas – priversti tekstą tobulėti.`,
             className: "critic",
             model: () => criticModel.value,
             thoughtProcess: [],
@@ -76,11 +76,11 @@ document.addEventListener('DOMContentLoaded', () => {
             model: () => editorModel.value,
             thoughtProcess: [],
         },
-        boss: {
+        boss: { // *** MODIFIED BOSS ***
             name: "Boss",
-            systemPrompt: `Tu esi Tauris, įmonės direktorius. Tavo užduotis - peržiūrėti visų darbuotojų darbą ir pateikti galutinę, aukščiausios kokybės teksto versiją.`,
+            systemPrompt: `Tu esi Tauris, įmonės direktorius.  Tavo užduotis - pateikti ABSOLIUČIAI TOBULĄ galutinę teksto versiją.  Būk NEPAPRASTAI REIKLUS ir ATIDUS.  Tavo sprendimas yra GALUTINIS.`,
             className: "boss",
-            model: () => bossModel ? bossModel.value : 'openai', // Fallback to 'openai'
+            model: () => bossModel ? bossModel.value : 'openai',
             thoughtProcess: [],
         }
     };
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let conversationHistory = [];
     let isCollaborationActive = false;
     let currentIteration = 0;
-    let maxIterations = 1;  // Default
+    let maxIterations = 1;
     let currentWorkerIndex = 0;
     let exchangeDelay = 1000;
     let latestResult = "";
@@ -303,19 +303,24 @@ SVARBU:
 - *Privalai* pateikti nuorodas į šaltinius, kur įmanoma (naudok lietuviškus akademinius standartus).
 - Pabaigoje perduok darbą Vytautui (kritikui).`;
                         break;
-                    case 'critic':
+                    case 'critic':  // *** VERY IMPORTANT - MODIFIED CRITIC PROMPT ***
                         prompt = `${historyText}
 
-Dabar Tu esi Vytautas, kritikas.
+Dabar Tu esi Vytautas, NEGAILESTINGAS kritikas.
 
 SVARBU:
-- Įvertink Gabijos patobulintą tekstą.  Būk *konstruktyviai* kritiškas.
-- Pradėk nuo teksto *stiprybių*.  Kas *gerai* padaryta?
-- Tada nurodyk *konkrečius* trūkumus ir tobulintinas vietas.  Cituok problemines teksto dalis.
-- Pasiūlyk *labai konkrečius* patobulinimus, kuriuos Eglė (redaktorė) galėtų įgyvendinti.  Ne "pataisyk stilių", o "šį sakinį performuluok taip: ...".
-- Analizuok: teksto logiką, struktūrą, argumentų pagrįstumą, šaltinių naudojimą, kalbos aiškumą.
-- Rašyk taisyklinga lietuvių kalba.
-- Pabaigoje perduok darbą Eglei.`;
+- Būk MAKSIMALIAI kritiškas.  Tavo užduotis – RASTI VISKĄ, kas blogai su tekstu.  Nesistenk būti mandagus.
+- Ieškok:
+    - Loginių spragų.
+    - Nepagrįstų teiginių.
+    - Silpnų argumentų.
+    - Netinkamo šaltinių naudojimo.
+    - Stiliaus klaidų.
+    - Gramatikos klaidų.
+    - Bet kokių neaiškumų ar dviprasmybių.
+- Būk SPECIFINIS.  Nurodyk TIKSLIAS teksto vietas ir PAAIŠKINK, kas su jomis negerai.  Pvz., "Šis sakinys ('...') yra visiškai nelogiškas, nes..." arba "Šaltinis X yra nepatikimas, nes...".
+- Pasiūlyk KONKREČIUS pataisymus, pvz., "Vietoj '...' rašyk '...'".
+- Pabaigoje perduok darbą Eglei (redaktorei) su AIŠKIAIS nurodymais, ką reikia taisyti.`;
                         break;
                     case 'editor':
                         prompt = `${historyText}
@@ -615,22 +620,39 @@ IMPORTANT INSTRUCTIONS:
         return ApiConnector.trimConversationHistory(historyText);
     }
 
+    // *** MODIFIED extractFinalResult ***
     function extractFinalResult() {
-        const contributions = conversationHistory.filter(msg => msg.role !== 'System' && msg.content && msg.content.length > 100);
-        const lastEditorMsg = contributions.filter(msg => msg.role === 'Editor').slice(-1)[0];
-        if (lastEditorMsg) return cleanUpFinalResult(lastEditorMsg.content);
-        const lastWriterMsg = contributions.filter(msg => msg.role === 'Writer').slice(-1)[0];
-        if (lastWriterMsg) return cleanUpFinalResult(lastWriterMsg.content);
-        return cleanUpFinalResult(conversationHistory[conversationHistory.length - 1]?.content || "");
+        // Get ALL contributions from ALL roles, except 'System'.
+        const allContributions = conversationHistory.filter(msg => msg.role !== 'System' && msg.content);
+
+                // If the Boss has contributed, use *only* the Boss's *last* contribution.
+        const bossContributions = allContributions.filter(msg => msg.role === 'Boss');
+        if (bossContributions.length > 0) {
+            return cleanUpFinalResult(bossContributions[bossContributions.length - 1].content);
+        }
+
+        // If the Boss hasn't contributed (e.g., error), fall back to Editor, then Writer.
+        const editorContributions = allContributions.filter(msg => msg.role === 'Editor');
+        if (editorContributions.length > 0) {
+            return cleanUpFinalResult(editorContributions[editorContributions.length - 1].content);
+        }
+
+        const writerContributions = allContributions.filter(msg => msg.role === 'Writer');
+        if (writerContributions.length > 0) {
+            return cleanUpFinalResult(writerContributions[writerContributions.length - 1].content);
+        }
+
+        return cleanUpFinalResult(conversationHistory[conversationHistory.length - 1]?.content || ""); // Fallback to last message
     }
+
 
     function cleanUpFinalResult(text) {
         if (!text) return '';
         return text
-            .replace(/^.*?(štai ką parašiau|štai mano tekstas|peržiūrėjau tekstą|štai pataisytas tekstas|atsižvelgdama į.*pataisiau|pateikiu galutinę versiją|mano galutinė versija|ačiū visiems).*\s*:/si, '')
+            .replace(/^.*?(štai ką parašiau|štai mano tekstas|peržiūrėjau tekstą|štai pataisytas tekstas|atsižvelgdama į.*pataisiau|pateikiu galutinę versiją|mano galutinė versija|ačiū visiems|štai mano galutinė šio teksto versija).*\s*:/si, '')
             .replace(/(gabija|vytautas|eglė|jonas|tauris|perduodu|tikiuosi|linkiu|su pagarba|šefas|redaktorė|tyrėja|rašytojas|kritikas)[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
             .replace(/as the (writer|researcher|critic|editor|boss).*?:/gi, '')
-                        .replace(/i've (drafted|enhanced|evaluated|refined|reviewed).*?:/gi, '')
+            .replace(/i've (drafted|enhanced|evaluated|refined|reviewed).*?:/gi, '')
             .replace(/\[CONTENT_START\]/gi, '')
             .replace(/\[CONTENT_END\]/gi, '')
             .trim();
@@ -717,8 +739,8 @@ IMPORTANT INSTRUCTIONS:
                 completeFinalizeCollaboration();
             }).catch(error => {
                 console.error("Error in boss review:", error);
-                addMessageToChatLog('System', `Šefas susirgo, bet galutinis tekstas vis tiek paruoštas.`, 'system');
-                completeFinalizeCollaboration();
+                addMessageToChatLog('System', `Šefas susirgo, bet galutinis tekstas vis tiek paruoštas (pagal redaktorę).`, 'system'); // More specific message
+                completeFinalizeCollaboration(); // Still complete, but use fallback.
             });
         } else {
             completeFinalizeCollaboration();
@@ -729,7 +751,7 @@ IMPORTANT INSTRUCTIONS:
         const worker = workers[finalWorker];
         const thinkingId = `thinking-boss-${Date.now()}`;
         addThinkingIndicator(worker.name, thinkingId);
-        updateStatus(`Šefas Tauris apžvelgia rezultatus...`);
+        updateStatus(`Šefas Tauris APŽVELGIA ir TIKRINA...`); // More accurate status
 
         try {
             if (window.ErrorAnimations) ErrorAnimations.showWorkingAnimation('boss');
@@ -738,27 +760,24 @@ IMPORTANT INSTRUCTIONS:
                 ApiConnector.formatConversationForApi(conversationHistory, 12) : formatCollaborationHistory();
             const initialTopic = conversationHistory.find(msg => msg.role === 'System')?.content || "Unknown topic";
 
+            // *** VERY IMPORTANT - MODIFIED BOSS PROMPT ***
             const prompt = `${historyText}
 
-Dabar Tu esi Tauris, biuro šefas.
+Dabar Tu esi Tauris, įmonės direktorius, ir TAVO žodis yra GALUTINIS.
 
-SVARBU:
-- Peržvelk VISŲ darbuotojų (Jono, Gabijos, Vytauto, Eglės) darbą.
-- Pateik GALUTINĘ teksto versiją.  Tai TURI būti aukščiausios kokybės, profesionalus, išbaigtas tekstas, tinkamas publikavimui.
-- Apjunk visų darbuotojų geriausias dalis į vieną nuoseklų dokumentą.
+SVARBU (VISKAS YRA SVARBU):
+- Tavo užduotis – sukurti *TOBULĄ* galutinę teksto versiją.  Ne "gerą", o *TOBULĄ*.
+- **NEPRALEISK NĖ VIENOS KLAIDOS.**  Patikrink VISKĄ: gramatiką, stilių, logiką, faktus, šaltinius – VISKĄ.
+- **Būk NEPAPRASTAI REIKLUS.**  Jei kas nors *bent truputį* negerai – KEISK.
+- **INTEGRUOK** visų ankstesnių darbuotojų (Jono, Gabijos, Vytauto, Eglės) darbą.  Paimk GERIAUSIUS dalykus iš kiekvieno.  Atmesti blogus.
+- Jeigu reikia, *PERRAŠYK* dalis teksto ar net VISĄ tekstą.
+- Tekstas TURI atitikti pradinę užduotį (straipsnis, blogo įrašas, ir t.t.).
+- Tekstas TURI būti parašytas TOBULAI taisyklinga lietuvių kalba.
+- Pradėk nuo: "Ačiū visiems už darbą. Štai MANO GALUTINĖ ir NEPRIEKAIŠTINGA šio teksto versija:"
+- Pabaigoje, jei reikia, gali trumpai pakomentuoti savo sprendimus, pvz. "Pašalinau X, nes...".
 
-TEMA: "${initialTopic}"
+TEMA: "${initialTopic}"`;
 
-Reikalavimai:
-1. Aiški struktūra (įvadas, dėstymas, išvados).
-2. Visi SVARBŪS faktai ir šaltiniai iš Gabijos.
-3. Ištaisytos problemos pagal Vytauto kritiką.
-4. Eglės atlikti kalbos pataisymai.
-5. Jono originalios idėjos ir kūrybiškumas (jei tinka).
-6. Visiškai taisyklinga lietuvių kalba.
-7. Tekstas turi atitikti pradinę užduotį (straipsnis, blogo įrašas, etc.).
-
-Pradėk nuo: "Ačiū visiems už darbą! Štai mano galutinė šio teksto versija:"`;
 
             const model = typeof worker.model === 'function' ? worker.model() : 'openai';
             const response = await generateResponse(prompt, worker.systemPrompt, model);
@@ -767,7 +786,7 @@ Pradėk nuo: "Ačiū visiems už darbą! Štai mano galutinė šio teksto versij
             if (window.ErrorAnimations) ErrorAnimations.stopWorkingAnimation('boss');
 
             conversationHistory.push({ role: worker.name, content: response });
-            latestResult = response;
+            latestResult = response; // Keep track of the Boss's *raw* response.
             addMessageToChatLog(worker.name, response, worker.className);
             analyzeThoughtProcess(worker, response);
             displayThoughtProcess(finalWorker);
@@ -785,7 +804,7 @@ Pradėk nuo: "Ačiū visiems už darbą! Štai mano galutinė šio teksto versij
     }
 
     function completeFinalizeCollaboration() {
-        const finalResultText = extractFinalResult();
+        const finalResultText = extractFinalResult(); // Now correctly extracts ONLY Boss's text.
         displayFinalResult(finalResultText);
         if (copyResultBtn) copyResultBtn.disabled = false;
         if (downloadResultBtn) downloadResultBtn.disabled = false;
