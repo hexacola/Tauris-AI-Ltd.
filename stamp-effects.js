@@ -16,7 +16,8 @@ class StampEffects {
         }
         
         // Remove any existing signature (to avoid duplication)
-        const existingSignature = document.getElementById('finalResult').querySelector('.boss-signature');
+        const finalResult = document.getElementById('finalResult');
+        const existingSignature = finalResult ? finalResult.querySelector('.boss-signature') : null;
         if (existingSignature) {
             existingSignature.remove();
         }
@@ -27,7 +28,6 @@ class StampEffects {
         bossStamp.textContent = 'ŠEFO PATVIRTINTA';
         
         // Add stamp to the end of finalResult, not the container
-        const finalResult = document.getElementById('finalResult');
         if (finalResult) {
             // Make sure we append it to the end of the content
             finalResult.appendChild(bossStamp);
