@@ -10,55 +10,82 @@ document.addEventListener('DOMContentLoaded', function() {
         
         window.addThinkingIndicator = function(workerName, id) {
             const messageDiv = document.createElement('div');
-            messageDiv.className = `message thinking ${workerName === 'Writer' ? 'writer' : workerName === 'Researcher' ? 'researcher' : workerName === 'Critic' ? 'critic' : 'editor'}`;
+            const workerTypeKey = workerName === 'Writer' ? 'writer' : 
+                               workerName === 'Researcher' ? 'researcher' : 
+                               workerName === 'Critic' ? 'critic' : 
+                               workerName === 'Editor' ? 'editor' : 'boss';
+                               
+            messageDiv.className = `message thinking ${workerTypeKey}`;
             messageDiv.id = id;
-            
+
             const header = document.createElement('div');
             header.className = 'message-header';
             
-            // Translate worker names
-            let lithuanianName;
-            switch(workerName) {
-                case 'Writer': lithuanianName = 'Jonas (Rašytojas)'; break;
-                case 'Researcher': lithuanianName = 'Gabija (Tyrėja)'; break;
-                case 'Critic': lithuanianName = 'Vytautas (Kritikas)'; break;
-                case 'Editor': lithuanianName = 'Eglė (Redaktorė)'; break;
-                default: lithuanianName = workerName;
-            }
+            // Use Lithuanian names
+            let lithuanianName = workerName;
+            if (workerName === 'Writer') lithuanianName = 'Jonas';
+            else if (workerName === 'Researcher') lithuanianName = 'Gabija';
+            else if (workerName === 'Critic') lithuanianName = 'Vytautas';
+            else if (workerName === 'Editor') lithuanianName = 'Eglė';
+            else if (workerName === 'Boss') lithuanianName = 'Tauris';
             
             header.textContent = lithuanianName;
-            
+
             const contentP = document.createElement('p');
             
-            // Set different thinking text based on worker role
-            let lithuanianThinking = getRandomThinkingText(workerName.toLowerCase());
-            contentP.textContent = lithuanianThinking;
+            // Select a random Lithuanian thinking phrase based on worker role
+            const thinkingPhrases = {
+                'Writer': [
+                    'Ieško įkvėpimo...',
+                    'Kuria juodraštį...',
+                    'Formuluoja mintis...',
+                    'Rašo pirmas eilutes...',
+                ],
+                'Researcher': [
+                    'Analizuoja šaltinius...',
+                    'Ieško mokslinės literatūros...',
+                    'Tikrina faktus...',
+                    'Renka akademinius duomenis...',
+                ],
+                'Critic': [
+                    'Kritiškai vertina...',
+                    'Analizuoja argumentus...',
+                    'Ieško loginių klaidų...',
+                    'Vertina teksto kokybę...',
+                ],
+                'Editor': [
+                    'Taiso gramatines klaidas...',
+                    'Tobulina teksto struktūrą...',
+                    'Ieško netikslumų...',
+                    'Redaguoja sakinius...',
+                ],
+                'Boss': [
+                    'Apžvelgia komandos darbą...',
+                    'Priima galutinius sprendimus...',
+                    'Integruoja visų indėlį...',
+                    'Vertina galutinį rezultatą...',
+                ]
+            };
             
+            // Get random phrase for this worker
+            const phraseList = thinkingPhrases[workerName] || ['Mąsto...'];
+            const randomPhrase = phraseList[Math.floor(Math.random() * phraseList.length)];
+            
+            contentP.textContent = randomPhrase;
+
             messageDiv.appendChild(header);
             messageDiv.appendChild(contentP);
+
+            document.getElementById('chatLog').appendChild(messageDiv);
             
+            // Scroll to bottom
             const chatLog = document.getElementById('chatLog');
-            if (chatLog) {
-                chatLog.appendChild(messageDiv);
-                chatLog.scrollTop = chatLog.scrollHeight;
-            }
-            
+            if (chatLog) chatLog.scrollTop = chatLog.scrollHeight;
+
             // Add thinking animation to the worker card
             if (window.ErrorAnimations) {
-                const workerKey = workerName.toLowerCase();
-                ErrorAnimations.showThinkingTooHardAnimation(workerKey);
+                window.ErrorAnimations.showWorkingAnimation(workerTypeKey);
             }
-            
-            // Start a timer to rotate thinking messages
-            const thinkingInterval = setInterval(() => {
-                if (document.body.contains(contentP)) {
-                    contentP.textContent = getRandomThinkingText(workerName.toLowerCase());
-                } else {
-                    clearInterval(thinkingInterval);
-                }
-            }, 2500);
-            
-            return thinkingInterval; // Return the interval ID for cleanup
         };
     }
 
@@ -81,6 +108,33 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }, 1000);
+    
+    // Override updateStatus to use Lithuanian names
+    if (window.updateStatus) {
+        const originalUpdateStatus = window.updateStatus;
+        
+        window.updateStatus = function(message, type = "") {
+            // Replace English names with Lithuanian names
+            let lithuanianMessage = message
+                .replace(/Writer/g, 'Jonas')
+                .replace(/Researcher/g, 'Gabija')
+                .replace(/Critic/g, 'Vytautas')
+                .replace(/Editor/g, 'Eglė')
+                .replace(/Boss/g, 'Tauris')
+                .replace(/writer/g, 'Jonas')
+                .replace(/researcher/g, 'Gabija')
+                .replace(/critic/g, 'Vytautas')
+                .replace(/editor/g, 'Eglė')
+                .replace(/boss/g, 'Tauris')
+                .replace(/thinking/g, 'mąsto')
+                .replace(/Thinking/g, 'Mąsto');
+                
+            // Call original with translated message
+            originalUpdateStatus(lithuanianMessage, type);
+        };
+    }
+    
+    console.log("Lietuviškos mąstymo animacijos aktyvuotos!");
 });
 
 /**

@@ -930,3 +930,111 @@ function removeDeepSeekModels() {
         });
     });
 }
+
+// Lithuanian language enhancements for the UI
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Lithuanian worker greetings
+    const lithuanianGreetings = {
+        'Jonas': ['Labas rytas!', 'Sveiki!', 'Ką rašome šiandien?', 'Esu pasiruošęs kurti!'],
+        'Gabija': ['Faktai yra svarbiausi!', 'Tirsiu šią temą išsamiai', 'Ieškau patikimų šaltinių'],
+        'Vytautas': ['Perskaitysiu kritiškai', 'Konstruktyvi kritika - raktas į tobulėjimą', 'Įvertinsiu objektyviai'],
+        'Eglė': ['Kalbos taisyklingumas - svarbiausia!', 'Ištaisysiu visas klaidas', 'Tobulinsiu tekstą'],
+        'Tauris': ['Vadovauju procesui', 'Priimsiu galutinius sprendimus', 'Biuras dirba efektyviai']
+    };
+
+    // Function to translate English worker names to Lithuanian
+    function translateWorkerNames() {
+        // Check for untranslated worker names in all status messages
+        document.querySelectorAll('.message-header, .notice-content, .worker-working').forEach(element => {
+            const text = element.textContent;
+            
+            // Replace English role names with Lithuanian
+            if (text.includes('Writer')) element.textContent = text.replace('Writer', 'Jonas');
+            if (text.includes('Researcher')) element.textContent = text.replace('Researcher', 'Gabija');
+            if (text.includes('Critic')) element.textContent = text.replace('Critic', 'Vytautas');
+            if (text.includes('Editor')) element.textContent = text.replace('Editor', 'Eglė');
+            if (text.includes('Boss')) element.textContent = text.replace('Boss', 'Tauris');
+            
+            // Also check for status messages that might use these names
+            if (text.includes(' writer ')) element.textContent = text.replace(' writer ', ' Jonas ');
+            if (text.includes(' researcher ')) element.textContent = text.replace(' researcher ', ' Gabija ');
+            if (text.includes(' critic ')) element.textContent = text.replace(' critic ', ' Vytautas ');
+            if (text.includes(' editor ')) element.textContent = text.replace(' editor ', ' Eglė ');
+            if (text.includes(' boss ')) element.textContent = text.replace(' boss ', ' Tauris ');
+        });
+    }
+
+    // Show random worker mood changes
+    function updateRandomWorkerMood() {
+        // Get all worker mood elements
+        const workerMoods = document.querySelectorAll('.worker-mood');
+        
+        // Pick a random mood element
+        const randomMoodEl = workerMoods[Math.floor(Math.random() * workerMoods.length)];
+        
+        if (randomMoodEl) {
+            // Get worker type from parent card
+            const workerCard = randomMoodEl.closest('.role-card');
+            if (!workerCard) return;
+            
+            // List of possible Lithuanian moods with emojis
+            const moods = [
+                'Puiki 😊', 'Įkvėpta 🚀', 'Susikaupusi 🧠', 'Kūrybiška ✨', 'Pavargusi 😴', 
+                'Entuziastinga 🔥', 'Pedantiška ✓', 'Smalsus 🔍', 'Filosofiška 🤔', 'Kritiška 🧐'
+            ];
+            
+            // Pick a random mood
+            const randomMood = moods[Math.floor(Math.random() * moods.length)];
+            
+            // Update the mood text
+            randomMoodEl.textContent = `Nuotaika: ${randomMood}`;
+            
+            // Add mood change animation
+            randomMoodEl.classList.add('mood-change');
+            setTimeout(() => {
+                randomMoodEl.classList.remove('mood-change');
+            }, 1000);
+        }
+        
+        // Schedule next mood update
+        setTimeout(updateRandomWorkerMood, 60000 + Math.random() * 120000); // Random time between 1-3 minutes
+    }
+
+    // Add Lithuanian holidays to the office notice
+    function addLithuanianHoliday() {
+        const holidays = [
+            { date: '02-16', name: 'Lietuvos valstybės atkūrimo diena' },
+            { date: '03-11', name: 'Lietuvos nepriklausomybės atkūrimo diena' },
+            { date: '07-06', name: 'Karaliaus Mindaugo karūnavimo diena' },
+            { date: '01-01', name: 'Naujieji metai' },
+            { date: '05-01', name: 'Tarptautinė darbo diena' },
+            { date: '08-15', name: 'Žolinė' },
+            { date: '11-01', name: 'Visų Šventųjų diena' },
+            { date: '12-24', name: 'Kūčios' },
+            { date: '12-25', name: 'Kalėdos' }
+        ];
+        
+        // Get today's date in MM-DD format
+        const today = new Date();
+        const todayFormatted = `${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+        
+        // Check if today is a holiday
+        const holiday = holidays.find(h => h.date === todayFormatted);
+        
+        if (holiday) {
+            const statusMessage = document.getElementById('statusMessage');
+            if (statusMessage) {
+                statusMessage.innerHTML = `<span style="color: #ffda00;">🎉 Šiandien ${holiday.name}! 🎉</span>`;
+            }
+        }
+    }
+
+    // Run our Lithuanian enhancements
+    translateWorkerNames();
+    updateRandomWorkerMood();
+    addLithuanianHoliday();
+    
+    // Setup a periodic check for untranslated names (runs every 5 seconds)
+    setInterval(translateWorkerNames, 5000);
+});

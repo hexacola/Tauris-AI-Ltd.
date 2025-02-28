@@ -204,6 +204,26 @@ DABAR: Peržiūrėk VISĄ susirašinėjimo istoriją ir pateik galutinę tekstų
         }
     };
 
+    // Add Lithuanian translations for worker roles
+    const lithuanianNames = {
+        'Writer': 'Jonas (Rašytojas)',
+        'Researcher': 'Gabija (Tyrėja)',
+        'Critic': 'Vytautas (Kritikas)',
+        'Editor': 'Eglė (Redaktorė)',
+        'Boss': 'Tauris (Šefas)',
+        'System': 'Sistema',
+        'writer': 'Jonas',
+        'researcher': 'Gabija',
+        'critic': 'Vytautas',
+        'editor': 'Eglė',
+        'boss': 'Tauris'
+    };
+
+    // Helper function to get Lithuanian name
+    function getLithuanianName(roleName) {
+        return lithuanianNames[roleName] || roleName;
+    }
+
     // State variables
     let conversationHistory = [];
     let isCollaborationActive = false;
@@ -359,8 +379,22 @@ DABAR: Peržiūrėk VISĄ susirašinėjimo istoriją ir pateik galutinę tekstų
         });
     }
 
+    // Modified updateStatus function to use Lithuanian names
     function updateStatus(message, type = "") {
-        statusMessage.textContent = message;
+        // Replace English role names with Lithuanian in status messages
+        let localizedMessage = message;
+        
+        // Replace worker type names in messages
+        Object.keys(workers).forEach(workerKey => {
+            const englishName = workers[workerKey].name;
+            const lithuanianName = getLithuanianName(workerKey);
+            localizedMessage = localizedMessage.replace(new RegExp(englishName, 'g'), lithuanianName);
+            
+            // Also replace the worker type directly
+            localizedMessage = localizedMessage.replace(new RegExp(workerKey, 'gi'), lithuanianName);
+        });
+        
+        statusMessage.textContent = localizedMessage;
         statusMessage.className = type;
     }
 
@@ -458,11 +492,12 @@ DABAR: Peržiūrėk VISĄ susirašinėjimo istoriją ir pateik galutinę tekstų
         const thinkingId = `thinking-${Date.now()}`;
         addThinkingIndicator(worker.name, thinkingId);
         
-        // Update status to show which iteration we're on
+        // Update status to show which iteration we're on with Lithuanian name
         const iterationInfo = currentIteration > 0 ? 
             ` (iteracija ${currentIteration + 1}/${maxIterations})` : 
             '';
-        updateStatus(`${worker.name} (${worker.model()})${iterationInfo} mąsto...`);
+        const lithuanianName = getLithuanianName(workerKey);
+        updateStatus(`${lithuanianName} (${worker.model()})${iterationInfo} mąsto...`);
 
         try {
             let prompt;
@@ -842,49 +877,24 @@ IMPORTANT INSTRUCTIONS:
         return workerSequence[currentWorkerIndex];
     }
 
-    function addMessageToChatLog(sender, content, className) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${className}`;
-
-        const header = document.createElement('div');
-        header.className = 'message-header';
-
-        const senderSpan = document.createElement('span');
-        senderSpan.textContent = sender;
-
-        const timeSpan = document.createElement('span');
-        timeSpan.className = 'message-time';
-        timeSpan.textContent = new Date().toLocaleTimeString();
-
-        header.appendChild(senderSpan);
-        header.appendChild(timeSpan);
-
-        const contentP = document.createElement('p');
-        contentP.textContent = content;
-
-        if (sender === 'System' && className === 'system' && content.startsWith('Debug:')) {
-            messageDiv.style.fontSize = '0.8em';
-            messageDiv.style.opacity = '0.7';
-        }
-
-        messageDiv.appendChild(header);
-        messageDiv.appendChild(contentP);
-
-        chatLog.appendChild(messageDiv);
-        scrollToBottom();
-    }
-
+    // Modified addThinkingIndicator to use Lithuanian names
     function addThinkingIndicator(workerName, id) {
         const messageDiv = document.createElement('div');
-        messageDiv.className = `message thinking ${workerName === 'Writer' ? 'writer' : workerName === 'Researcher' ? 'researcher' : workerName === 'Critic' ? 'critic' : 'editor'}`;
+        const workerTypeKey = workerName === 'Writer' ? 'writer' : 
+                           workerName === 'Researcher' ? 'researcher' : 
+                           workerName === 'Critic' ? 'critic' : 
+                           workerName === 'Editor' ? 'editor' : 'boss';
+                           
+        messageDiv.className = `message thinking ${workerTypeKey}`;
         messageDiv.id = id;
 
         const header = document.createElement('div');
         header.className = 'message-header';
-        header.textContent = workerName;
+        // Use Lithuanian name
+        header.textContent = getLithuanianName(workerName);
 
         const contentP = document.createElement('p');
-        contentP.textContent = 'Thinking...';
+        contentP.textContent = 'Užsirašo svarbius duomenis...';
 
         messageDiv.appendChild(header);
         messageDiv.appendChild(contentP);
@@ -894,11 +904,6 @@ IMPORTANT INSTRUCTIONS:
 
         // Add thinking animation to the worker card
         if (window.ErrorAnimations) {
-            // Fix: Use the worker name instead of workerKey which is not defined in this scope
-            const workerTypeKey = workerName === 'Writer' ? 'writer' : 
-                               workerName === 'Researcher' ? 'researcher' : 
-                               workerName === 'Critic' ? 'critic' : 
-                               workerName === 'Editor' ? 'editor' : 'boss';
             window.ErrorAnimations.showWorkingAnimation(workerTypeKey);
         }
     }
