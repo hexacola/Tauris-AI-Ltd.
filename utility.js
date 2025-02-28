@@ -42,6 +42,15 @@ class DocUtils {
      * @returns {string} - A suitable title
      */
     static extractTitle(text) {
+        // Add type check to ensure text is a string
+        if (typeof text !== 'string') {
+            console.warn('Expected text to be a string but got:', typeof text);
+            text = String(text || ''); // Convert to string or use empty string
+        }
+
+        // Now we can safely use trim()
+        text = text.trim();
+        
         const firstLine = text.trim().split('\n')[0];
         
         // Clean up the title and limit its length
@@ -95,6 +104,52 @@ class DocUtils {
             return successful;
         } catch (err) {
             console.error('execCommand error:', err);
+            return false;
+        }
+    }
+
+    /**
+     * Download document as a file
+     * @param {HTMLElement|string} content - The content to download
+     * @param {string} filename - Optional filename
+     */
+    static downloadAsDocument(content, filename = null) {
+        try {
+            // Extract text content - convert to string if it's an HTMLElement
+            let text;
+            if (content instanceof HTMLElement) {
+                text = content.innerText || content.textContent || '';
+            } else {
+                text = String(content || ''); // Ensure we have a string
+            }
+
+            // Now extract title from the string
+            const title = this.extractTitle(text);
+            
+            // Extract title from content or use generic name
+            const safeFilename = title.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.html';
+            
+            // Create document blob
+            const docBlob = this.createHtmlDoc(text, title);
+            
+            // Create download link
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(docBlob);
+            downloadLink.download = safeFilename;
+            
+            // Add to document temporarily and trigger download
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            
+            // Clean up
+            setTimeout(() => {
+                URL.revokeObjectURL(downloadLink.href);
+                document.body.removeChild(downloadLink);
+            }, 100);
+            
+            return true;
+        } catch (err) {
+            console.error('Error downloading document:', err);
             return false;
         }
     }
@@ -202,3 +257,20 @@ window.cleanMarkdownFormatting = cleanMarkdownFormatting;
 window.addMarkdownAvoidanceInstructions = addMarkdownAvoidanceInstructions;
 window.downloadAsDocument = downloadAsDocument;
 window.DocUtils = DocUtils;
+
+// Set up download action
+document.addEventListener('DOMContentLoaded', function() {
+    const downloadBtn = document.getElementById('downloadResultBtn');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', function() {
+            const finalResult = document.getElementById('finalResult');
+            if (finalResult) {
+                DocUtils.downloadAsDocument(finalResult);
+            }
+        });
+    }
+});
+
+// Make available globally
+window.DocUtils = DocUtils;
+window.downloadAsDocument = DocUtils.downloadAsDocument.bind(DocUtils);
