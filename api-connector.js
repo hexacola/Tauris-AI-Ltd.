@@ -1,0 +1,479 @@
+/**
+ * API Connector that implements the exact Pollinations API specification
+ */
+class ApiConnector {
+    /**
+     * Generates text using the Pollinations API
+     * @param {string} prompt - User prompt
+     * @param {string} systemPrompt - System instructions
+     * @param {string} model - Model name
+     * @param {object} options - Additional options
+     * @returns {Promise<string>} - Generated text
+     */
+    static async generateText(prompt, systemPrompt, model = 'openai', options = {}) {
+        const {
+            seed = Math.floor(Math.random() * 10000),
+            jsonMode = false,
+            timeout = 60000, // Increased timeout to 60 seconds
+            isPrivate = true,
+            forcePost = false
+        } = options;
+        
+        // Check if model is known to fail with 500 errors
+        if (window.ModelAvailability && !window.ModelAvailability.isAvailable(model)) {
+            const alternative = window.ModelAvailability.findAlternative(model);
+            if (alternative) {
+                console.log(`Model ${model} is blacklisted. Using ${alternative} instead.`);
+                return this.generateText(prompt, systemPrompt, alternative, options);
+            } else {
+                console.warn("All models seem to be failing! Trying with openai anyway.");
+                model = 'openai'; 
+            }
+        }
+        
+        // Track generation time and update UI
+        const startTime = Date.now();
+        this.showFetchingStatus(true, `Requesting ${model}...`);
+        
+        // Check if prompt is too long (> 8000 chars) - URLs have length limits
+        const promptLength = prompt.length + systemPrompt.length;
+        const usePostOnly = forcePost || promptLength > 3000; // Force POST for long prompts
+        
+        try {
+            // Always use POST method for consistency with API docs
+            console.log(`Generating with ${model} using POST method`);
+            
+            // Create proper message structure according to API documentation
+            const postData = {
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: prompt }
+                ],
+                model: model,
+                seed: seed,
+                private: isPrivate
+            };
+            
+            if (jsonMode) {
+                postData.jsonMode = true;
+            }
+            
+            // Create an AbortController to handle timeouts manually
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => {
+                controller.abort();
+                console.warn(`Request timeout after ${timeout/1000}s`);
+            }, timeout);
+            
+            try {
+                // Use POST method as documented in the API
+                const response = await fetch('https://text.pollinations.ai/', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json, text/plain, */*'
+                    },
+                    body: JSON.stringify(postData),
+                    signal: controller.signal
+                });
+                
+                // Clear timeout since request completed
+                clearTimeout(timeoutId);
+                
+                // If server returns 500 error, mark model as problematic
+                if (response.status === 500) {
+                    if (window.ModelAvailability) {
+                        window.ModelAvailability.markFailed(model, 500);
+                    }
+                    throw new Error(`HTTP error: 500 (Server error) with model ${model}`);
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status}`);
+                }
+                
+                const contentType = response.headers.get('content-type') || '';
+                const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+                this.showFetchingStatus(false);
+                
+                // Handle response based on content type
+                const responseText = await response.text();
+                
+                if (contentType.includes('application/json')) {
+                    try {
+                        const data = JSON.parse(responseText);
+                        
+                        // Structure matches the API docs (choices[0].message.content)
+                        if (data.choices && data.choices[0] && data.choices[0].message) {
+                            console.log(`Generated text with ${model} in ${duration}s`);
+                            return data.choices[0].message.content;
+                        } else if (data.text) {
+                            return data.text;
+                        } else {
+                            throw new Error("Unexpected JSON response structure");
+                        }
+                    } catch (jsonParseError) {
+                        console.warn(`Response claimed to be JSON but couldn't parse: ${jsonParseError.message}`);
+                        // Fallback to text if it looks valid
+                        if (responseText.includes("As the") || responseText.includes("I've")) {
+                            return responseText;
+                        }
+                        throw new Error(`Invalid JSON response: ${jsonParseError.message}`);
+                    }
+                } else {
+                    // Plain text response
+                    console.log(`Got text response from ${model} in ${duration}s`);
+                    return responseText;
+                }
+                
+            } catch (postError) {
+                // Clear timeout if it hasn't fired yet
+                clearTimeout(timeoutId);
+                
+                // If we get a 500 error, mark model as problematic
+                if (postError.message.includes('500')) {
+                    if (window.ModelAvailability) {
+                        window.ModelAvailability.markFailed(model, 500);
+                        
+                        // Try alternative model
+                        const alternative = window.ModelAvailability.findAlternative(model);
+                        if (alternative) {
+                            console.log(`Model ${model} failed with 500. Trying ${alternative} instead.`);
+                            return this.generateText(prompt, systemPrompt, alternative, options);
+                        }
+                    }
+                }
+                
+                // If POST fails and error isn't network-related, try GET method as fallback
+                if (!usePostOnly && !postError.name === 'AbortError' && 
+                    !postError.message.includes('NetworkError') && 
+                    !postError.message.includes('Failed to fetch')) {
+                    
+                    console.warn(`POST failed: ${postError.message}. Trying GET method as fallback...`);
+                    this.showFetchingStatus(true, `POST failed, trying GET...`);
+                    
+                    // Use GET method as documented in the API
+                    const encodedPrompt = encodeURIComponent(prompt);
+                    const encodedSystem = encodeURIComponent(systemPrompt);
+                    
+                    // Check URL length for GET request
+                    const estimatedUrlLength = `https://text.pollinations.ai/${encodedPrompt}?model=${model}&system=${encodedSystem}&seed=${seed}&private=${isPrivate}`.length;
+                    
+                    if (estimatedUrlLength > 8000) {
+                        console.warn(`URL too long (${estimatedUrlLength} chars) for GET request. Truncating prompt.`);
+                        const maxPromptLength = prompt.length - (estimatedUrlLength - 7500);
+                        const truncatedPrompt = prompt.substring(0, maxPromptLength) + "... [truncated]";
+                        return this.generateText(truncatedPrompt, systemPrompt, model, options);
+                    }
+                    
+                    // Create GET request according to API documentation
+                    const getController = new AbortController();
+                    const getTimeoutId = setTimeout(() => {
+                        getController.abort();
+                    }, timeout);
+                    
+                    try {
+                        const getResponse = await fetch(`https://text.pollinations.ai/${encodedPrompt}?model=${model}&system=${encodedSystem}&seed=${seed}&private=${isPrivate}`, {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json, text/plain, */*',
+                                'Cache-Control': 'no-cache'
+                            },
+                            signal: getController.signal
+                        });
+                        
+                        clearTimeout(getTimeoutId);
+                        
+                        if (getResponse.status === 500) {
+                            if (window.ModelAvailability) {
+                                window.ModelAvailability.markFailed(model, 500);
+                                
+                                const alternative = window.ModelAvailability.findAlternative(model);
+                                if (alternative) {
+                                    console.log(`Model ${model} failed with 500. Trying ${alternative} instead.`);
+                                    return this.generateText(prompt, systemPrompt, alternative, options);
+                                }
+                            }
+                            throw new Error(`GET request failed: 500 with model ${model}`);
+                        }
+                        
+                        if (!getResponse.ok) {
+                            throw new Error(`GET request failed: ${getResponse.status}`);
+                        }
+                        
+                        // Process GET response
+                        const responseText = await getResponse.text();
+                        const contentType = getResponse.headers.get('content-type') || '';
+                        const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+                        this.showFetchingStatus(false);
+                        
+                        if (contentType.includes('application/json')) {
+                            try {
+                                const data = JSON.parse(responseText);
+                                if (data.choices && data.choices[0] && data.choices[0].message) {
+                                    return data.choices[0].message.content;
+                                } else if (data.text) {
+                                    return data.text;
+                                } else {
+                                    return JSON.stringify(data);
+                                }
+                            } catch (jsonParseError) {
+                                // Fallback to text if it looks valid
+                                if (responseText.includes("As the") || responseText.includes("I've")) {
+                                    return responseText;
+                                }
+                                throw jsonParseError;
+                            }
+                        } else {
+                            // Plain text response
+                            console.log(`Got text response from ${model} in ${duration}s`);
+                            return responseText;
+                        }
+                    } catch (getError) {
+                        clearTimeout(getTimeoutId);
+                        
+                        if (getError.message.includes('500')) {
+                            if (window.ModelAvailability) {
+                                window.ModelAvailability.markFailed(model, 500);
+                                
+                                const alternative = window.ModelAvailability.findAlternative(model);
+                                if (alternative && alternative !== model) {
+                                    console.log(`Model ${model} failed with 500. Trying ${alternative} instead.`);
+                                    return this.generateText(prompt, systemPrompt, alternative, options);
+                                }
+                            }
+                        }
+                        throw getError;
+                    }
+                } else {
+                    // If we're already using POST only or the error is network-related, rethrow
+                    throw postError;
+                }
+            }
+        } catch (error) {
+            this.showFetchingStatus(false);
+            const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+            
+            let errorMsg = `Failed after ${duration}s: `;
+            
+            if (error.name === 'AbortError') {
+                errorMsg += `Request timed out after ${timeout/1000} seconds`;
+            } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+                errorMsg += 'Network connection issue. Please check your internet connection.';
+            } else if (error.message.includes('CORS')) {
+                errorMsg += 'CORS policy error. Try refreshing or using a different model.';
+            } else if (error.message.includes("Unexpected token")) {
+                errorMsg += 'Invalid JSON response from API. The server might be returning a format we cannot process.';
+            } else if (error.message.includes("500")) {
+                errorMsg += `Server error with ${model}. The model might be temporarily unavailable.`;
+                
+                // For 500 errors, try to use a different model
+                if (window.ModelAvailability) {
+                    const alternative = window.ModelAvailability.findAlternative(model);
+                    if (alternative && alternative !== model) {
+                        console.log(`Finding alternative for ${model} due to 500 error. Using ${alternative}`);
+                        // Return the alternative model's response
+                        return this.generateText(prompt, systemPrompt, alternative, options);
+                    }
+                }
+            } else {
+                errorMsg += error.message;
+            }
+            
+            console.error(`${errorMsg} (model: ${model})`);
+            throw new Error(errorMsg);
+        }
+    }
+    
+    /**
+     * Gets available models from the API
+     * @returns {Promise<Array>} - List of available models
+     */
+    static async getModels() {
+        try {
+            const response = await fetch('https://text.pollinations.ai/models', {
+                headers: { 'Cache-Control': 'no-cache' },
+                signal: AbortSignal.timeout(5000)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Failed to fetch models: ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching models:', error);
+            return this.getFallbackModels();
+        }
+    }
+    
+    /**
+     * Gets only the preferred model families
+     * @returns {Promise<Array>} - Filtered list of models
+     */
+    static async getPreferredModels() {
+        const allModels = await this.getModels();
+        return this.filterPreferredModels(allModels);
+    }
+    
+    /**
+     * Filters models to include only preferred families
+     */
+    static filterPreferredModels(models) {
+        const preferredFamilies = ['openai', 'gemini', 'deepseek', 'llama', 'searchgpt'];
+        
+        // Filter to only include specified families
+        const filtered = models.filter(model => {
+            // Check if model belongs to any preferred family
+            return preferredFamilies.some(family => 
+                model.name === family || model.name.startsWith(family + '-')
+            );
+        });
+        
+        // Sort by family priority and capabilities
+        filtered.sort((a, b) => {
+            // Priority order
+            const familyOrder = {
+                'openai': 1,
+                'gemini': 2,
+                'deepseek': 3, 
+                'llama': 4,
+                'searchgpt': 5
+            };
+            
+            // Get base family name
+            const getFamily = name => {
+                for (const family of preferredFamilies) {
+                    if (name === family || name.startsWith(family + '-')) {
+                        return family;
+                    }
+                }
+                return name;
+            };
+            
+            const aFamily = getFamily(a.name);
+            const bFamily = getFamily(b.name);
+            
+            // Compare by family order
+            const aOrder = familyOrder[aFamily] || 99;
+            const bOrder = familyOrder[bFamily] || 99;
+            
+            if (aOrder !== bOrder) return aOrder - bOrder;
+            
+            // Then by special capabilities
+            if ((a.vision || a.reasoning) && !(b.vision || b.reasoning)) return -1;
+            if (!(a.vision || a.reasoning) && (b.vision || b.reasoning)) return 1;
+            
+            // Then by name for consistent ordering
+            return a.name.localeCompare(b.name);
+        });
+        
+        return filtered;
+    }
+    
+    /**
+     * Returns fallback models in case API fails
+     */
+    static getFallbackModels() {
+        return [
+            // OpenAI models
+            { name: 'openai', type: 'chat', description: 'OpenAI GPT-4o-mini', baseModel: true, vision: true },
+            { name: 'openai-large', type: 'chat', description: 'OpenAI GPT-4o', baseModel: true, vision: true },
+            
+            // Gemini models
+            { name: 'gemini', type: 'chat', description: 'Gemini 2.0 Flash', baseModel: true },
+            
+            // DeepSeek models
+            { name: 'deepseek', type: 'chat', description: 'DeepSeek-V3', baseModel: true },
+            
+            // Llama models
+            { name: 'llama', type: 'chat', description: 'Llama 3.3 70B', baseModel: true },
+            
+            // SearchGPT
+            { name: 'searchgpt', type: 'chat', description: 'SearchGPT', baseModel: false }
+        ];
+    }
+    
+    /**
+     * Check API health
+     */
+    static async checkHealth() {
+        try {
+            const response = await fetch('https://text.pollinations.ai/health', {
+                signal: AbortSignal.timeout(3000)
+            });
+            return response.ok;
+        } catch {
+            return false;
+        }
+    }
+    
+    /**
+     * Updates the UI to show fetching status
+     */
+    static showFetchingStatus(active, message = '') {
+        const indicator = document.getElementById('fetchingIndicator');
+        const statusText = document.getElementById('modelStatusText');
+        
+        if (indicator) {
+            indicator.classList.toggle('active', active);
+        }
+        
+        if (statusText && message) {
+            statusText.textContent = message;
+        } else if (statusText) {
+            statusText.textContent = active ? 'Fetching response...' : '';
+        }
+    }
+    
+    /**
+     * Improves conversation history formatting to maintain context between workers
+     * @param {Array} conversationHistory - The full conversation history array
+     * @param {number} maxMessages - Maximum number of messages to include
+     * @returns {string} - Formatted conversation history for API context
+     */
+    static formatConversationForApi(conversationHistory, maxMessages = 10) {
+        // Always include the initial topic/prompt if available
+        let result = "";
+        const initialTopic = conversationHistory.find(msg => msg.role === 'System');
+        
+        if (initialTopic) {
+            result += `TOPIC: ${initialTopic.content}\n\n`;
+        }
+        
+        // Get the last N messages (excluding system messages)
+        const relevantMessages = conversationHistory
+            .filter(msg => msg.role !== 'System')
+            .slice(-maxMessages);
+            
+        // Format as proper conversation
+        relevantMessages.forEach(msg => {
+            result += `${msg.role}: ${msg.content}\n\n---\n\n`;
+        });
+        
+        return result;
+    }
+    
+    /**
+     * Reduces conversation history to fit within API limits
+     * @param {string} history - The full conversation history
+     * @param {number} maxLength - Maximum allowed length
+     * @returns {string} - Truncated history
+     */
+    static trimConversationHistory(history, maxLength = 6000) {
+        if (history.length <= maxLength) return history;
+        
+        // Split by the separator pattern
+        const parts = history.split('---\n\n');
+        
+        // Always keep the first part (topic) and last two exchanges
+        const firstPart = parts[0];
+        const lastParts = parts.slice(-4); // Keep last 4 messages for better context
+        
+        // Create a shortened history
+        return firstPart + '\n\n---\n\n[Earlier conversation omitted for brevity]\n\n---\n\n' + lastParts.join('---\n\n');
+    }
+}
+
+// Make available globally
+window.ApiConnector = ApiConnector;
