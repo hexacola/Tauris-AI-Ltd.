@@ -156,7 +156,49 @@ SVARBU: Nenaudokite Markdown formatavimo savo atsakyme:
     return markdownAvoidanceText + prompt;
 }
 
+/**
+ * Download content as a document
+ * @param {string} text - Text content to download
+ * @param {string} filename - Filename (optional)
+ */
+function downloadAsDocument(text, filename = null) {
+    if (!text) {
+        console.error('No text provided for download');
+        return;
+    }
+
+    try {
+        // Extract title from content or use generic name
+        const title = filename || DocUtils.extractTitle(text) || 'document';
+        const safeFilename = title.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.html';
+        
+        // Create document blob
+        const docBlob = DocUtils.createHtmlDoc(text, title);
+        
+        // Create download link
+        const downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(docBlob);
+        downloadLink.download = safeFilename;
+        
+        // Add to document temporarily and trigger download
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        
+        // Clean up
+        setTimeout(() => {
+            URL.revokeObjectURL(downloadLink.href);
+            document.body.removeChild(downloadLink);
+        }, 100);
+        
+        return true;
+    } catch (err) {
+        console.error('Error downloading document:', err);
+        return false;
+    }
+}
+
 // Make utilities available globally
 window.cleanMarkdownFormatting = cleanMarkdownFormatting;
 window.addMarkdownAvoidanceInstructions = addMarkdownAvoidanceInstructions;
+window.downloadAsDocument = downloadAsDocument;
 window.DocUtils = DocUtils;

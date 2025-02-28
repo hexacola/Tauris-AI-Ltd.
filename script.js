@@ -182,7 +182,11 @@ Asmenybė:
 - Vertini komandos narių stipriąsias puses
 - Mėgsti stiprią juodą kavą, verslo literatūrą ir trumpas, bet efektyvias keliones
 
-Tavo tikslas - peržvelgti VISĄ ankstesnių darbuotojų (Jono, Gabijos, Vytauto ir Eglės) darbą ir sukurti GALUTINĘ versiją, kuri būtų geriausia iš visų. Pradėk nuo profesionalaus įvado "Ačiū visiems už įdėtą darbą! Peržiūrėjęs visą susirašinėjimo istoriją, pateikiu galutinę šio teksto versiją:". 
+Tavo tikslas - peržvelgti VISĄ ankstesnių darbuotojų (Jono, Gabijos, Vytauto ir Eglės) darbą ir sukurti GALUTINĘ versiją, kuri būtų geriausia iš visų. 
+
+LABAI SVARBU: Tavo atsakyme pateik TIK galutinį tekstą, nepridedant jokios analizės ar komentarų apie teksto struktūrą ar kokybę. Nereikia pateikti jokių išvardintų punktų apie teksto trūkumus ar privalumus. Tavo rezultatas turi būti TIKTAI pats tekstas, kurį klientas gaus kaip galutinį produktą.
+
+Savo atsakymą pradėk sakydamas: "Štai galutinis šio teksto variantas:"
 
 Galutiniame tekste turi būti:
 1. Aiški struktūra su įvadu, dėstymu ir išvadomis
@@ -193,7 +197,7 @@ Galutiniame tekste turi būti:
 
 Tavo rezultatas turi būti profesionalus, išbaigtas akademinis tekstas, tinkamas publikavimui, kuris apjungia visų darbuotojų geriausias įžvalgas.
 
-DABAR: Peržiūrėk VISĄ susirašinėjimo istoriją ir pateik galutinę tekstų versiją.`,
+DABAR: Peržiūrėk VISĄ susirašinėjimo istoriją ir pateik galutinę tekstų versiją BET PATEIK TIK PATĮ TEKSTĄ, BE JOKIŲ KOMENTARŲ AR ANALIZĖS.`,
             className: "boss",
             model: () => bossModel ? bossModel.value : (openaiModel ? openaiModel.value : 'openai')
         }
@@ -1174,119 +1178,120 @@ Dabar Tu esi Tauris, biuro šefas ir galutinis prižiūrėtojas. Tu matai VISĄ 
 
 Tavo užduotis:
 1. Apjunk visų darbuotojų geriausias idėjas ir įžvalgas į vieną nuoseklų tekstą
-2. Parodyk, kaip tekstas tobulėjo per visas iteracijas
-3. Užtikrink, kad galutinis variantas turi aiškią struktūrą: įvadą, pagrindinę dalį ir išvadas
-4. Įtrauk Gabijos pateiktus faktus ir šaltinius iš visų iteracijų
-5. Atsižvelk į Vytauto kritiką ir siūlomus patobulinimus per visą procesą
-6. Išlaikyk Eglės kalbos ir stiliaus pataisymus iš visų iteracijų
+2. Užtikrink, kad galutinis variantas turi aiškią struktūrą: įvadą, pagrindinę dalį ir išvadas
+3. Įtrauk Gabijos pateiktus faktus ir šaltinius iš visų iteracijų
+4. Atsižvelk į Vytauto kritiką ir siūlomus patobulinimus per visą procesą
+5. Išlaikyk Eglės kalbos ir stiliaus pataisymus iš visų iteracijų
 
-SVARBU: Kaip šefas, tu turi matyti visą bendrą vaizdą ir užtikrinti, kad galutinis tekstas yra aukščiausios kokybės, atspindintis visą komandos darbo evoliuciją.
+LABAI SVARBU: Tavo atsakyme pateik TIK galutinį tekstą, nepridedant jokios analizės ar komentarų. NEPRIDĖK JOKIŲ PUNKTŲ APIE TEKSTO KOKYBĘ. 
 
-Pradėk: "Ačiū visiems už įdėtą darbą per ${iterationNumber} iteracijas! Peržiūrėjęs visą bendradarbiavimo istoriją, pateikiu galutinę šio teksto versiją:"`;
+NEPRIDĖK sekcijų kaip "Galutinė analizė" ar "Komentarai" - pateik tik patį išbaigtą tekstą, kurį klientas gaus kaip galutinį produktą.
 
-            default:
-                return historyText;
-        }
+Pradėk: "Štai galutinis šio teksto variantas:"`;
+
+        default:
+            return historyText;
+    }
+}
+
+// Clean up the final result text to remove role intros and outros
+function cleanUpFinalResult(text) {
+    if (!text) return '';
+
+    // Remove any conversational elements
+    let cleaned = text
+        // Remove common Lithuanian introductions
+        .replace(/^.*?(štai ką parašiau|štai mano tekstas|peržiūrėjau tekstą|štai pataisytas tekstas).*?:/si, '')
+        // Remove signatures and handoffs
+        .replace(/gabija[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
+        .replace(/vytautas[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
+        .replace(/eglė[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
+        .replace(/jonas[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
+        .replace(/tauris[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
+        .replace(/perduodu.*?gabijai.*$/si, '')
+        .replace(/perduodu.*?vytautui.*$/si, '')
+        .replace(/perduodu.*?eglei.*$/si, '')
+        .replace(/perduodu.*?jonui.*$/si, '')
+        // Remove other ending sentences
+        .replace(/tikiuosi.*?$/si, '')
+        .replace(/linkiu.*?$/si, '')
+        // Remove any remaining English phrases that might have slipped through
+        .replace(/as the (writer|researcher|critic|editor|boss).*?:/gi, '')
+        .replace(/i've (drafted|enhanced|evaluated|refined|reviewed).*?:/gi, '')
+        .replace(/\[CONTENT_START\]/gi, '')
+        .replace(/\[CONTENT_END\]/gi, '')
+        .trim();
+
+    // Remove markdown formatting
+    if (window.StampEffects && typeof window.StampEffects.cleanMarkdownFormatting === 'function') {
+        cleaned = window.StampEffects.cleanMarkdownFormatting(cleaned);
+    } else {
+        // Fallback markdown cleaning if StampEffects not available
+        cleaned = cleaned
+            // Remove headers (# Header)
+            .replace(/^#+\s+(.*)$/gm, '$1')
+            // Remove bold/italic markers
+            .replace(/(\*\*|\*|__|_)(.*?)\1/g, '$2')
+            // Remove horizontal rules
+            .replace(/^\s*[-*_]{3,}\s*$/gm, '')
+            // Remove blockquotes
+            .replace(/^>\s+(.*)$/gm, '$1')
+            // Clean multiple consecutive line breaks
+            .replace(/\n{3,}/g, '\n\n');
     }
 
-    // Clean up the final result text to remove role intros and outros
-    function cleanUpFinalResult(text) {
-        if (!text) return '';
+    return cleaned;
+}
 
-        // Remove any conversational elements
-        let cleaned = text
-            // Remove common Lithuanian introductions
-            .replace(/^.*?(štai ką parašiau|štai mano tekstas|peržiūrėjau tekstą|štai pataisytas tekstas).*?:/si, '')
-            // Remove signatures and handoffs
-            .replace(/gabija[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
-            .replace(/vytautas[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
-            .replace(/eglė[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
-            .replace(/jonas[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
-            .replace(/tauris[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
-            .replace(/perduodu.*?gabijai.*$/si, '')
-            .replace(/perduodu.*?vytautui.*$/si, '')
-            .replace(/perduodu.*?eglei.*$/si, '')
-            .replace(/perduodu.*?jonui.*$/si, '')
-            // Remove other ending sentences
-            .replace(/tikiuosi.*?$/si, '')
-            .replace(/linkiu.*?$/si, '')
-            // Remove any remaining English phrases that might have slipped through
-            .replace(/as the (writer|researcher|critic|editor|boss).*?:/gi, '')
-            .replace(/i've (drafted|enhanced|evaluated|refined|reviewed).*?:/gi, '')
-            .replace(/\[CONTENT_START\]/gi, '')
-            .replace(/\[CONTENT_END\]/gi, '')
-            .trim();
+// Display the final result in the UI
+function displayFinalResult(resultText) {
+    const processedText = cleanUpFinalResult(resultText);
+    finalResult.textContent = processedText;
+}
 
-        // Remove markdown formatting
-        if (window.StampEffects && typeof window.StampEffects.cleanMarkdownFormatting === 'function') {
-            cleaned = window.StampEffects.cleanMarkdownFormatting(cleaned);
-        } else {
-            // Fallback markdown cleaning if StampEffects not available
-            cleaned = cleaned
-                // Remove headers (# Header)
-                .replace(/^#+\s+(.*)$/gm, '$1')
-                // Remove bold/italic markers
-                .replace(/(\*\*|\*|__|_)(.*?)\1/g, '$2')
-                // Remove horizontal rules
-                .replace(/^\s*[-*_]{3,}\s*$/gm, '')
-                // Remove blockquotes
-                .replace(/^>\s+(.*)$/gm, '$1')
-                // Clean multiple consecutive line breaks
-                .replace(/\n{3,}/g, '\n\n');
-        }
-
-        return cleaned;
-    }
-
-    // Display the final result in the UI
-    function displayFinalResult(resultText) {
-        const processedText = cleanUpFinalResult(resultText);
-        finalResult.textContent = processedText;
-    }
-
-    // Also need to fix the incomplete function in the script
-    function finalizeCollaboration() {
-        // Before completing, let's add the boss's final review
-        if (isCollaborationActive) {
-            processFinalBossReview().then(() => {
-                completeFinalizeCollaboration();
-            }).catch(error => {
-                console.error("Error in boss review:", error);
-                addMessageToChatLog('System', `Šefas susirgo, bet galutinis tekstas vis tiek paruoštas.`, 'system');
-                completeFinalizeCollaboration();
-            });
-        } else {
+// Also need to fix the incomplete function in the script
+function finalizeCollaboration() {
+    // Before completing, let's add the boss's final review
+    if (isCollaborationActive) {
+        processFinalBossReview().then(() => {
             completeFinalizeCollaboration();
-        }
+        }).catch(error => {
+            console.error("Error in boss review:", error);
+            addMessageToChatLog('System', `Šefas susirgo, bet galutinis tekstas vis tiek paruoštas.`, 'system');
+            completeFinalizeCollaboration();
+        });
+    } else {
+        completeFinalizeCollaboration();
     }
+}
 
-    async function processFinalBossReview() {
-        const worker = workers[finalWorker];
+async function processFinalBossReview() {
+    const worker = workers[finalWorker];
 
-        // Add thinking indicator
-        const thinkingId = `thinking-boss-${Date.now()}`;
-        addThinkingIndicator(worker.name, thinkingId);
-        updateStatus(`Šefas Tauris apžvelgia rezultatus...`);
+    // Add thinking indicator
+    const thinkingId = `thinking-boss-${Date.now()}`;
+    addThinkingIndicator(worker.name, thinkingId);
+    updateStatus(`Šefas Tauris apžvelgia rezultatus...`);
 
-        try {
-            // Show boss animation
-            if (window.ErrorAnimations) {
-                ErrorAnimations.showWorkingAnimation('boss');
-            }
+    try {
+        // Show boss animation
+        if (window.ErrorAnimations) {
+            ErrorAnimations.showWorkingAnimation('boss');
+        }
 
-            // Create a comprehensive prompt for the boss that includes all previous conversation
-            // Use ApiConnector's formatting if available for better context
-            let historyText = "";
+        // Create a comprehensive prompt for the boss that includes all previous conversation
+        // Use ApiConnector's formatting if available for better context
+        let historyText = "";
 
-            if (ApiConnector && typeof ApiConnector.formatConversationForApi === 'function') {
-                historyText = ApiConnector.formatConversationForApi(conversationHistory, 12); // Include more context for boss
-            } else {
-                historyText = formatCollaborationHistory();
-            }
+        if (ApiConnector && typeof ApiConnector.formatConversationForApi === 'function') {
+            historyText = ApiConnector.formatConversationForApi(conversationHistory, 12); // Include more context for boss
+        } else {
+            historyText = formatCollaborationHistory();
+        }
 
-            const initialTopic = conversationHistory.find(msg => msg.role === 'System')?.content || "Unknown topic";
+        const initialTopic = conversationHistory.find(msg => msg.role === 'System')?.content || "Unknown topic";
 
-            const prompt = `${historyText}
+        const prompt = `${historyText}
 
 Dabar Tu esi Tauris, biuro šefas ir visų galutinis prižiūrėtojas. Tavo tikslas - peržvelgti visų ankstesnių darbuotojų
 (Jono, Gabijos, Vytauto ir Eglės) darbą ir pateikti GALUTINĘ versiją, kuri apjungia visų geriausias dalis į vieną nuoseklų,
@@ -1307,305 +1312,316 @@ Galutinio teksto struktūra:
 - Aiškios išvados
 - Nuorodos į šaltinius (jei yra)
 
+LABAI SVARBU: Tavo atsakyme pateik TIK galutinį tekstą, nepridedant jokios analizės ar komentarų apie tekstą. NEPRIDĖK JOKIŲ PUNKTŲ APIE TEKSTO KOKYBĘ AR STRUKTŪRĄ. Nepridėk "Galutinės analizės" sekcijos - pateik tik patį išbaigtą tekstą.
+
 Tai bus GALUTINIS šio darbo rezultatas, todėl jis turi būti išskirtinės, nepriekaištingos kokybės.
-Pradėk nuo frazės: "Ačiū visiems už įdėtą darbą! Štai mano galutinė šio teksto versija:"`;
+Pradėk nuo frazės: "Štai galutinis šio teksto variantas:"`;
 
-            // Get a response from the boss
-            const model = worker.model && typeof worker.model === 'function' ? worker.model() : 'openai';
-            const response = await generateResponse(prompt, worker.systemPrompt, model);
+        // Get a response from the boss
+        const model = worker.model && typeof worker.model === 'function' ? worker.model() : 'openai';
+        const response = await generateResponse(prompt, worker.systemPrompt, model);
 
-            // Remove thinking indicator
-            removeThinkingIndicator(thinkingId);
+        // Remove thinking indicator
+        removeThinkingIndicator(thinkingId);
 
-            // Stop boss animation
-            if (window.ErrorAnimations) {
-                ErrorAnimations.stopWorkingAnimation('boss');
-            }
-
-            // Add to conversation history
-            conversationHistory.push({
-                role: worker.name,
-                content: response
-            });
-
-            // Save as the final result
-            latestResult = response;
-
-            // Add the response to the chat log with special boss styling
-            addMessageToChatLog(worker.name, response, worker.className);
-            updateStatus(`Šefas Tauris pateikė galutinį rezultatą!`);
-
-            // Add boss stamp animation to the result
-            setTimeout(() => {
-                if (window.StampEffects) {
-                    StampEffects.showBossApproval();
-                }
-            }, 1000);
-
-            return response;
-        } catch (error) {
-            console.error("Error getting boss review:", error);
-            removeThinkingIndicator(thinkingId);
-
-            // Stop boss animation
-            if (window.ErrorAnimations) {
-                ErrorAnimations.stopWorkingAnimation('boss');
-            }
-
-            throw error;
+        // Stop boss animation
+        if (window.ErrorAnimations) {
+            ErrorAnimations.stopWorkingAnimation('boss');
         }
+
+        // Add to conversation history
+        conversationHistory.push({
+            role: worker.name,
+            content: response
+        });
+
+        // Save as the final result
+        latestResult = response;
+
+        // Add the response to the chat log with special boss styling
+        addMessageToChatLog(worker.name, response, worker.className);
+        updateStatus(`Šefas Tauris pateikė galutinį rezultatą!`);
+
+        // Add boss stamp animation to the result
+        setTimeout(() => {
+            if (window.StampEffects) {
+                StampEffects.showBossApproval();
+            }
+        }, 1000);
+
+        return response;
+    } catch (error) {
+        console.error("Error getting boss review:", error);
+        removeThinkingIndicator(thinkingId);
+
+        // Stop boss animation
+        if (window.ErrorAnimations) {
+            ErrorAnimations.stopWorkingAnimation('boss');
+        }
+
+        throw error;
+    }
+}
+
+function completeFinalizeCollaboration() {
+    // Extract final result from the last boss contribution or editor if boss failed
+    const finalResultText = extractFinalResult();
+
+    // Display the final result in the dedicated section
+    displayFinalResult(finalResultText);
+
+    // Enable only the result section buttons
+    if (copyResultBtn) copyResultBtn.disabled = false;
+    if (downloadResultBtn) downloadResultBtn.disabled = false;
+
+    if (resultStatus) resultStatus.textContent = '(Completed)';
+
+    stopCollaboration();
+    addMessageToChatLog('System', 'Collaboration completed. Final result is available below.', 'system final');
+    updateStatus("Collaboration completed", "success");
+
+    // Show the stamp animation
+    showCompletedStamp();
+
+    return;
+}
+
+// Extract the final result from the last boss's contribution if available
+function extractFinalResult() {
+    // Try to use the boss's final contribution first
+    const contributions = conversationHistory.filter(msg =>
+        msg.role !== 'System' && msg.content && msg.content.length > 100
+    );
+
+    // Get the boss's contribution if available
+    const bossMsg = contributions
+        .filter(msg => msg.role === 'Boss')
+        .slice(-1)[0];
+
+    if (bossMsg) {
+        // Extract just the document content, removing conversational parts
+        const content = bossMsg.content;
+
+        // Remove common opening phrases
+        let cleanText = content
+            .replace(/^.*?(štai galutinis|ačiū visiems už įdėtą darbą|štai mano galutinė|peržiūrėjau visų darbą).*?:/si, '')
+            .trim();
+
+        // Remove common closing phrases
+        cleanText = cleanText
+            .replace(/su pagarba.*?$/si, '')
+            .replace(/tauris.*?$/si, '')
+            .replace(/šefas.*?$/si, '')
+            .trim();
+            
+        // Remove the analysis section that might appear at the end
+        cleanText = cleanText
+            .replace(/Galutinė analizė ir komentarai:[\s\S]*$/i, '')
+            .replace(/Sukurta aiški struktūra:[\s\S]*$/i, '')
+            .replace(/\d+\.\s*Sukurta aiški struktūra[\s\S]*$/i, '')
+            .replace(/\d+\.\s*Gabijos pateikti[\s\S]*$/i, '')
+            .replace(/Puikus komandos darbas!.*$/i, '')
+            .trim();
+            
+        // Clean markdown formatting added by the boss
+        if (window.StampEffects && typeof window.StampEffects.cleanMarkdownFormatting === 'function') {
+            cleanText = window.StampEffects.cleanMarkdownFormatting(cleanText);
+        }
+
+        return cleanText;
     }
 
-    function completeFinalizeCollaboration() {
-        // Extract final result from the last boss contribution or editor if boss failed
-        const finalResultText = extractFinalResult();
+    // ...existing code...
 
-        // Display the final result in the dedicated section
-        displayFinalResult(finalResultText);
+    // Fallback to the original extractFinalResult logic for editor and writer
+    // ...existing extractFinalResult code...
 
-        // Enable only the result section buttons
-        if (copyResultBtn) copyResultBtn.disabled = false;
-        if (downloadResultBtn) downloadResultBtn.disabled = false;
+    // Get the last substantive contribution (from Editor if possible)
+    const lastEditorMsg = contributions
+        .filter(msg => msg.role === 'Editor')
+        .slice(-1)[0];
 
-        if (resultStatus) resultStatus.textContent = '(Completed)';
+    if (lastEditorMsg) {
+        // Extract just the document content, removing conversational parts
+        const content = lastEditorMsg.content;
 
-        stopCollaboration();
-        addMessageToChatLog('System', 'Collaboration completed. Final result is available below.', 'system final');
-        updateStatus("Collaboration completed", "success");
+        // Remove common opening phrases
+        let cleanText = content
+            .replace(/^.*(štai pataisytas tekstas|štai galutinė versija|štai kaip pataisiau|peržiūrėjau tekstą).*?:/si, '')
+            .replace(/^.*?(štai rezultatas|pataisiau tekstą).*?:/si, '')
+            .trim();
 
-        // Show the stamp animation
+        // Remove common closing phrases
+        cleanText = cleanText
+            .replace(/tikiuosi, kad šis tekstas.*?$/si, '')
+            .replace(/linkiu sėkmės.*?$/si, '')
+            .replace(/perduodu šį tekstą.*?$/si, '')
+            .replace(/ačiū už galimybę.*?$/si, '')
+            .replace(/esu pasiruošusi atsakyti.*?$/si, '')
+            .trim();
+
+        return cleanText;
+    }
+
+    // Fallback to writer's text if neither boss nor editor is available
+    const lastWriterMsg = contributions
+        .filter(msg => msg.role === 'Writer')
+        .slice(-1)[0];
+
+    if (lastWriterMsg) {
+        // Extract just the document content from writer's text
+        const content = lastWriterMsg.content;
+
+        return content
+            .replace(/^.*?(štai ką parašiau|štai mano tekstas|parašiau tokį tekstą).*?:/si, '')
+            .replace(/^.*?(štai mano juodraštis|štai pradinis variantas).*?:/si, '')
+            .replace(/gabija[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
+            .replace(/perduodu.*?$/si, '')
+            .trim();
+    }
+
+    // If no identifiable messages found, fall back to the original method
+    return cleanUpFinalResult(conversationHistory[conversationHistory.length - 1]?.content || "");
+}
+
+// Override addMessageToChatLog to use Lithuanian role names
+function addMessageToChatLog(role, message, className = '') {
+    const chatLog = document.getElementById('chatLog');
+    if (!chatLog) return;
+
+    const messageEl = document.createElement('div');
+    messageEl.className = `message ${className}`;
+
+    // Translate role names to Lithuanian
+    let displayRole = role;
+    switch (role) {
+        case 'Writer':
+            displayRole = 'Jonas (Rašytojas)';
+            break;
+        case 'Researcher':
+            displayRole = 'Gabija (Tyrėja)';
+            break;
+        case 'Critic':
+            displayRole = 'Vytautas (Kritikas)';
+            break;
+        case 'Editor':
+            displayRole = 'Eglė (Redaktorė)';
+            break;
+        case 'Boss':
+            displayRole = 'Tauris (Šefas)';
+            break;
+        case 'System':
+            displayRole = 'Sistema';
+            break;
+        // Keep original name for other roles
+    }
+
+    messageEl.innerHTML = `<strong>${displayRole}:</strong> ${message}`;
+    chatLog.appendChild(messageEl);
+
+    // Scroll to bottom
+    chatLog.scrollTop = chatLog.scrollHeight;
+
+    return messageEl;
+}
+
+// Fix the finalizeCollaboration function to properly show completion
+const originalFinalizeCollaboration = window.finalizeCollaboration;
+if (typeof originalFinalizeCollaboration === 'function') {
+    window.finalizeCollaboration = function () {
+        // Call original function
+        originalFinalizeCollaboration();
+
+        // Set status to completed and show the stamp
+        setResultStatus('completed');
         showCompletedStamp();
 
-        return;
-    }
-
-    // Extract the final result from the last boss's contribution if available
-    function extractFinalResult() {
-        // Try to use the boss's final contribution first
-        const contributions = conversationHistory.filter(msg =>
-            msg.role !== 'System' && msg.content && msg.content.length > 100
-        );
-
-        // Get the boss's contribution if available
-        const bossMsg = contributions
-            .filter(msg => msg.role === 'Boss')
-            .slice(-1)[0];
-
-        if (bossMsg) {
-            // Extract just the document content, removing conversational parts
-            const content = bossMsg.content;
-
-            // Remove common opening phrases
-            let cleanText = content
-                .replace(/^.*?(ačiū visiems už įdėtą darbą|štai mano galutinė|peržiūrėjau visų darbą).*?:/si, '')
-                .trim();
-
-            // Remove common closing phrases
-            cleanText = cleanText
-                .replace(/su pagarba.*?$/si, '')
-                .replace(/tauris.*?$/si, '')
-                .replace(/šefas.*?$/si, '')
-                .trim();
-
-            // Clean markdown formatting added by the boss
-            if (window.StampEffects && typeof window.StampEffects.cleanMarkdownFormatting === 'function') {
-                cleanText = window.StampEffects.cleanMarkdownFormatting(cleanText);
-            }
-
-            return cleanText;
+        // Add Lithuanian completion message
+        if (typeof addMessageToChatLog === 'function') {
+            addMessageToChatLog('Sistema', 'Darbas sėkmingai baigtas! Rezultatas pateiktas žemiau. 🎉', 'system final');
         }
 
-        // ...existing code...
+        // Update status message
+        updateStatus('Collaboration completed');
+    };
+}
 
-        // Fallback to the original extractFinalResult logic for editor and writer
-        // ...existing extractFinalResult code...
+// Override worker titles with Lithuanian names
+document.addEventListener('DOMContentLoaded', function () {
+    // Update worker role titles if not already in Lithuanian
+    const workerTitles = {
+        'writer': 'Rašytojas Jonas',
+        'researcher': 'Tyrėja Gabija',
+        'critic': 'Kritikas Vytautas',
+        'editor': 'Redaktorė Eglė'
+    };
 
-        // Get the last substantive contribution (from Editor if possible)
-        const lastEditorMsg = contributions
-            .filter(msg => msg.role === 'Editor')
-            .slice(-1)[0];
-
-        if (lastEditorMsg) {
-            // Extract just the document content, removing conversational parts
-            const content = lastEditorMsg.content;
-
-            // Remove common opening phrases
-            let cleanText = content
-                .replace(/^.*(štai pataisytas tekstas|štai galutinė versija|štai kaip pataisiau|peržiūrėjau tekstą).*?:/si, '')
-                .replace(/^.*?(štai rezultatas|pataisiau tekstą).*?:/si, '')
-                .trim();
-
-            // Remove common closing phrases
-            cleanText = cleanText
-                .replace(/tikiuosi, kad šis tekstas.*?$/si, '')
-                .replace(/linkiu sėkmės.*?$/si, '')
-                .replace(/perduodu šį tekstą.*?$/si, '')
-                .replace(/ačiū už galimybę.*?$/si, '')
-                .replace(/esu pasiruošusi atsakyti.*?$/si, '')
-                .trim();
-
-            return cleanText;
+    Object.entries(workerTitles).forEach(([role, name]) => {
+        const titleElement = document.querySelector(`.role-card.${role} h3`);
+        if (titleElement && !titleElement.textContent.includes('Jonas') &&
+            !titleElement.textContent.includes('Gabija') &&
+            !titleElement.textContent.includes('Vytautas') &&
+            !titleElement.textContent.includes('Eglė')) {
+            titleElement.textContent = name;
         }
-
-        // Fallback to writer's text if neither boss nor editor is available
-        const lastWriterMsg = contributions
-            .filter(msg => msg.role === 'Writer')
-            .slice(-1)[0];
-
-        if (lastWriterMsg) {
-            // Extract just the document content from writer's text
-            const content = lastWriterMsg.content;
-
-            return content
-                .replace(/^.*?(štai ką parašiau|štai mano tekstas|parašiau tokį tekstą).*?:/si, '')
-                .replace(/^.*?(štai mano juodraštis|štai pradinis variantas).*?:/si, '')
-                .replace(/gabija[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
-                .replace(/perduodu.*?$/si, '')
-                .trim();
-        }
-
-        // If no identifiable messages found, fall back to the original method
-        return cleanUpFinalResult(conversationHistory[conversationHistory.length - 1]?.content || "");
-    }
-
-    // Override addMessageToChatLog to use Lithuanian role names
-    function addMessageToChatLog(role, message, className = '') {
-        const chatLog = document.getElementById('chatLog');
-        if (!chatLog) return;
-
-        const messageEl = document.createElement('div');
-        messageEl.className = `message ${className}`;
-
-        // Translate role names to Lithuanian
-        let displayRole = role;
-        switch (role) {
-            case 'Writer':
-                displayRole = 'Jonas (Rašytojas)';
-                break;
-            case 'Researcher':
-                displayRole = 'Gabija (Tyrėja)';
-                break;
-            case 'Critic':
-                displayRole = 'Vytautas (Kritikas)';
-                break;
-            case 'Editor':
-                displayRole = 'Eglė (Redaktorė)';
-                break;
-            case 'Boss':
-                displayRole = 'Tauris (Šefas)';
-                break;
-            case 'System':
-                displayRole = 'Sistema';
-                break;
-            // Keep original name for other roles
-        }
-
-        messageEl.innerHTML = `<strong>${displayRole}:</strong> ${message}`;
-        chatLog.appendChild(messageEl);
-
-        // Scroll to bottom
-        chatLog.scrollTop = chatLog.scrollHeight;
-
-        return messageEl;
-    }
-
-    // Fix the finalizeCollaboration function to properly show completion
-    const originalFinalizeCollaboration = window.finalizeCollaboration;
-    if (typeof originalFinalizeCollaboration === 'function') {
-        window.finalizeCollaboration = function () {
-            // Call original function
-            originalFinalizeCollaboration();
-
-            // Set status to completed and show the stamp
-            setResultStatus('completed');
-            showCompletedStamp();
-
-            // Add Lithuanian completion message
-            if (typeof addMessageToChatLog === 'function') {
-                addMessageToChatLog('Sistema', 'Darbas sėkmingai baigtas! Rezultatas pateiktas žemiau. 🎉', 'system final');
-            }
-
-            // Update status message
-            updateStatus('Collaboration completed');
-        };
-    }
-
-    // Override worker titles with Lithuanian names
-    document.addEventListener('DOMContentLoaded', function () {
-        // Update worker role titles if not already in Lithuanian
-        const workerTitles = {
-            'writer': 'Rašytojas Jonas',
-            'researcher': 'Tyrėja Gabija',
-            'critic': 'Kritikas Vytautas',
-            'editor': 'Redaktorė Eglė'
-        };
-
-        Object.entries(workerTitles).forEach(([role, name]) => {
-            const titleElement = document.querySelector(`.role-card.${role} h3`);
-            if (titleElement && !titleElement.textContent.includes('Jonas') &&
-                !titleElement.textContent.includes('Gabija') &&
-                !titleElement.textContent.includes('Vytautas') &&
-                !titleElement.textContent.includes('Eglė')) {
-                titleElement.textContent = name;
-            }
-        });
     });
+});
 
-    // Make sure our updates are available to the window object
-    window.updateProgress = updateProgress;
-    window.setResultStatus = setResultStatus;
-    window.addMessageToChatLog = addMessageToChatLog;
-    window.updateStatus = updateStatus;
-    window.showCompletedStamp = showCompletedStamp;
+// Make sure our updates are available to the window object
+window.updateProgress = updateProgress;
+window.setResultStatus = setResultStatus;
+window.addMessageToChatLog = addMessageToChatLog;
+window.updateStatus = updateStatus;
+window.showCompletedStamp = showCompletedStamp;
 
-    // Add model blacklist monitoring 
-    document.addEventListener('model-blacklisted', function (event) {
-        const model = event.detail.model;
-        console.warn(`Model ${model} has been blacklisted by the system`);
+// Add model blacklist monitoring 
+document.addEventListener('model-blacklisted', function (event) {
+    const model = event.detail.model;
+    console.warn(`Model ${model} has been blacklisted by the system`);
 
-        // Update UI to show the model is blacklisted
-        addMessageToChatLog('System', `Model ${model} is experiencing server errors and has been temporarily disabled.`, 'system warning');
+    // Update UI to show the model is blacklisted
+    addMessageToChatLog('System', `Model ${model} is experiencing server errors and has been temporarily disabled.`, 'system warning');
 
-        // Check if any of our workers are using this model
-        Object.entries(workers).forEach(([key, worker]) => {
-            if (worker.model() === model) {
-                const alternative = window.ModelAvailability.findAlternative(model);
-                if (alternative) {
-                    addMessageToChatLog('System', `Switching ${worker.name} from ${model} to ${alternative}`, 'system');
-                    updateWorkerModel(key, alternative);
-                }
+    // Check if any of our workers are using this model
+    Object.entries(workers).forEach(([key, worker]) => {
+        if (worker.model() === model) {
+            const alternative = window.ModelAvailability.findAlternative(model);
+            if (alternative) {
+                addMessageToChatLog('System', `Switching ${worker.name} from ${model} to ${alternative}`, 'system');
+                updateWorkerModel(key, alternative);
             }
-        });
+        }
     });
-      // Utility function to update worker model selection in UI and worker object
-    function updateWorkerModel(workerKey, newModel) {
-        const worker = workers[workerKey];
-        if (!worker) return;
+});
+  // Utility function to update worker model selection in UI and worker object
+function updateWorkerModel(workerKey, newModel) {
+    const worker = workers[workerKey];
+    if (!worker) return;
 
-        // Update UI select element
-        const selectElement = document.getElementById(`${workerKey}Model`);
+    // Update UI select element
+    const selectElement = document.getElementById(`${workerKey}Model`);
 
-        if (selectElement) {
-            // Check if newModel exists as an option, if not add it temporarily
-            let option = selectElement.querySelector(`option[value="${newModel}"]`);
-            if (!option) {
-                option = document.createElement('option');
-                option.value = newModel;
-                option.textContent = newModel;
-                selectElement.add(option);
-            }
-             selectElement.value = newModel;
+    if (selectElement) {
+        // Check if newModel exists as an option, if not add it temporarily
+        let option = selectElement.querySelector(`option[value="${newModel}"]`);
+        if (!option) {
+            option = document.createElement('option');
+            option.value = newModel;
+            option.textContent = newModel;
+            selectElement.add(option);
         }
-
-        //Update worker object (if model is a function)
-        if(typeof worker.model === 'function'){
-            worker.model = () => newModel;
-        }
+         selectElement.value = newModel;
     }
 
-    // Placeholder for functions that might be defined elsewhere
-    function updateProgress() { /* Implementation */ }
-    function setResultStatus() { /* Implementation */ }
-    function showCompletedStamp() { /* Implementation */ }
+    //Update worker object (if model is a function)
+    if(typeof worker.model === 'function'){
+        worker.model = () => newModel;
+    }
+}
+
+// Placeholder for functions that might be defined elsewhere
+function updateProgress() { /* Implementation */ }
+function setResultStatus() { /* Implementation */ }
+function showCompletedStamp() { /* Implementation */ }
 
 });

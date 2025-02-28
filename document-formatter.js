@@ -19,7 +19,11 @@ class DocumentFormatter {
         
         // Remove the ŠEFO PATVIRTINTA text from the document - we'll add it as a visual element
         const textWithoutStamp = cleanText.replace(/ŠEFO PATVIRTINTA|PATVIRTINTA/g, '');
-        const paragraphs = textWithoutStamp.split('\n\n').filter(p => p.trim());
+        
+        // Remove references to team contributions, acknowledgments at the end
+        const cleanedText = this.removeTeamAcknowledgments(textWithoutStamp);
+        
+        const paragraphs = cleanedText.split('\n\n').filter(p => p.trim());
         
         // Process headings and paragraphs
         let currentSection = null;
@@ -56,10 +60,49 @@ class DocumentFormatter {
             }
         });
         
-        // Add the stamp as a visual element at the end
+        // Add the stamp as a visual element at the end (but not duplicate signature)
         this.addApprovalStamp(container);
         
         return container;
+    }
+    
+    /**
+     * Remove team acknowledgments and contributions from the final text
+     * @param {string} text - The text to clean
+     * @returns {string} - Cleaned text without acknowledgments
+     */
+    static removeTeamAcknowledgments(text) {
+        // Remove common patterns of acknowledgments and team contributions
+        let cleaned = text
+            // Remove signature blocks that might be in the text
+            .replace(/Tauris[\s\n]+Vyr\. AI Vadovas[\s\n]+2025-02-28/g, '')
+            // Remove typical Lithuanian acknowledgment phrases
+            .replace(/Ačiū\s+[A-Za-zĄČĘĖĮŠŲŪŽąčęėįšųūž]+\s+(už|ir).*/g, '')
+            .replace(/Dėkoju\s+[A-Za-zĄČĘĖĮŠŲŪŽąčęėįšųūž]+\s+(už|ir).*/g, '')
+            .replace(/Noriu padėkoti.*/gi, '')
+            // Remove notes about team effort
+            .replace(/Bendras\s+komandos\s+ind[ėe]lis.*/gi, '')
+            .replace(/Komandos\s+pastangomis.*/gi, '')
+            .replace(/Mūsų\s+komanda\s+atliko.*/gi, '')
+            // Remove common ending patterns
+            .replace(/Su\s+pagarba[,\s]+Tauris.*/gi, '')
+            .replace(/Pagarbiai[,\s]+Tauris.*/gi, '')
+            // Remove analysis sections that might appear at the end
+            .replace(/Galutinė analizė ir komentarai:[\s\S]*$/i, '')
+            .replace(/Sukurta aiški struktūra:[\s\S]*$/i, '')
+            .replace(/\d+\.\s*Sukurta aiški struktūra[\s\S]*$/i, '')
+            .replace(/\d+\.\s*Gabijos pateikti[\s\S]*$/i, '')
+            .replace(/Puikus komandos darbas!.*$/i, '')
+            // Clean up the result text - trim and remove extra newlines at the end
+            .trim()
+            .replace(/\n{3,}$/g, '\n\n');
+            
+        // Remove standard intro phrase that boss uses
+        cleaned = cleaned
+            .replace(/^.*?[Šš]tai galutinis [šs]io teksto variantas:?\s*/i, '')
+            .trim();
+            
+        return cleaned;
     }
     
     /**
@@ -127,18 +170,56 @@ class DocumentFormatter {
      * @param {HTMLElement} container - The document container
      */
     static addApprovalStamp(container) {
-        // Create the stamp container
+        // Create stamp div only - don't add signature since it will be handled separately
         const stampDiv = document.createElement('div');
         stampDiv.className = 'boss-approval-stamp';
         stampDiv.textContent = 'ŠEFO PATVIRTINTA';
         
-        // Add the stamp to the bottom of the document
+        // Add only the stamp to the container
         container.appendChild(stampDiv);
         
         // Trigger the stamp animation after a delay
         setTimeout(() => {
             stampDiv.classList.add('stamp-visible');
         }, 500);
+        
+        // Add signature block at right side of content
+        this.addSignatureBlock(container);
+    }
+    
+    /**
+     * Add signature block positioned at right side
+     * @param {HTMLElement} container - The document container
+     */
+    static addSignatureBlock(container) {
+        // Create signature container
+        const signatureContainer = document.createElement('div');
+        signatureContainer.className = 'document-signature';
+        
+        // Create signature elements
+        const signatureLine = document.createElement('div');
+        signatureLine.className = 'signature-line';
+        
+        const signatureName = document.createElement('div');
+        signatureName.className = 'signature-name';
+        signatureName.textContent = 'Tauris';
+        
+        const signatureTitle = document.createElement('div');
+        signatureTitle.className = 'signature-title';
+        signatureTitle.textContent = 'Vyr. AI Vadovas';
+        
+        const signatureDate = document.createElement('div');
+        signatureDate.className = 'signature-date';
+        signatureDate.textContent = '2025-02-28';
+        
+        // Add signature elements to the signature container
+        signatureContainer.appendChild(signatureLine);
+        signatureContainer.appendChild(signatureName);
+        signatureContainer.appendChild(signatureTitle);
+        signatureContainer.appendChild(signatureDate);
+        
+        // Add the signature container
+        container.appendChild(signatureContainer);
     }
     
     /**
@@ -209,6 +290,39 @@ class DocumentFormatter {
             [data-theme="dark"] .citation {
                 color: #aaa;
             }
+            
+            .document-signature {
+                margin-top: 30px;
+                text-align: right;
+                font-family: 'Times New Roman', serif;
+                padding-right: 30px;
+                font-size: 16px;
+                position: absolute;
+                right: 20px;
+                bottom: 20px;
+            }
+            
+            .signature-line {
+                border-top: 1px solid #000;
+                width: 200px;
+                margin: 0 0 10px auto;
+            }
+            
+            .signature-name {
+                font-weight: bold;
+            }
+            
+            .signature-title {
+                font-style: italic;
+            }
+            
+            .signature-date {
+                margin-top: 5px;
+            }
+            
+            [data-theme="dark"] .signature-line {
+                border-top-color: #ccc;
+            }
         `;
         
         document.head.appendChild(style);
@@ -225,7 +339,8 @@ class DocumentFormatter {
         document.addEventListener('boss-completed-work', () => {
             setTimeout(() => {
                 const text = document.getElementById('finalResult').textContent;
-                const formattedDocument = this.formatFinalDocument(text);
+                const cleanedText = this.removeTeamAcknowledgments(text); // Clean before formatting
+                const formattedDocument = this.formatFinalDocument(cleanedText);
                 if (formattedDocument) {
                     const finalResultElement = document.getElementById('finalResult');
                     finalResultElement.innerHTML = '';
@@ -244,7 +359,9 @@ class DocumentFormatter {
                 setTimeout(() => {
                     const finalResultElement = document.getElementById('finalResult');
                     if (finalResultElement && finalResultElement.textContent) {
-                        const formattedDocument = DocumentFormatter.formatFinalDocument(finalResultElement.textContent);
+                        // Clean the text before formatting
+                        const cleanedText = DocumentFormatter.removeTeamAcknowledgments(finalResultElement.textContent);
+                        const formattedDocument = DocumentFormatter.formatFinalDocument(cleanedText);
                         if (formattedDocument) {
                             finalResultElement.innerHTML = '';
                             finalResultElement.appendChild(formattedDocument);

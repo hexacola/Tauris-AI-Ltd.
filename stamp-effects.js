@@ -135,6 +135,12 @@ class StampEffects {
         // Clean any markdown in the text first
         finalResult.textContent = this.cleanMarkdownFormatting(finalResult.textContent);
         
+        // Remove any existing signature to avoid duplication
+        const existingSignature = finalResult.querySelector('.boss-signature');
+        if (existingSignature) {
+            existingSignature.remove();
+        }
+        
         // Create a signature div
         const signature = document.createElement('div');
         signature.className = 'boss-signature';
@@ -142,11 +148,13 @@ class StampEffects {
             <div class="signature-line"></div>
             <div class="signature-name">Tauris</div>
             <div class="signature-title">Vyr. AI Vadovas</div>
-            <div class="signature-date">${new Date().toLocaleDateString('lt-LT')}</div>
+            <div class="signature-date">2025-02-28</div>
         `;
         
-        // Add signature to the end of the result
-        finalResult.appendChild(signature);
+        // Add signature to the end of the result if DocumentFormatter hasn't already added one
+        if (!finalResult.querySelector('.document-signature')) {
+            finalResult.appendChild(signature);
+        }
         
         // Add CSS for signature if not already present
         if (!document.getElementById('signature-styles')) {

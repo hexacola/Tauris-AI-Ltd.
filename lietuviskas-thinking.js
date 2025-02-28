@@ -141,3 +141,71 @@ function getRandomThinkingText(workerType) {
     const texts = thinkingTexts[workerType] || ["Galvoja..."];
     return texts[Math.floor(Math.random() * texts.length)];
 }
+
+/**
+ * LietuviskasThinking - Script to handle how the Boss processes final content
+ * and removes team acknowledgments
+ */
+class LietuviskasThinking {
+    /**
+     * Initialize processing
+     */
+    static init() {
+        // Add event listener for boss's final submission
+        this.addBossMessageListener();
+    }
+    
+    /**
+     * Add listener for boss messages to clean up content
+     */
+    static addBossMessageListener() {
+        document.addEventListener('boss-preparing-message', (event) => {
+            if (event.detail && event.detail.message) {
+                // Clean up boss's message to remove team acknowledgments
+                const cleanedMessage = this.cleanBossMessage(event.detail.message);
+                event.detail.message = cleanedMessage;
+            }
+        });
+    }
+    
+    /**
+     * Clean boss message to remove team acknowledgments
+     * @param {string} message - The boss's message
+     * @returns {string} - Cleaned message
+     */
+    static cleanBossMessage(message) {
+        // Remove common patterns of acknowledgments and team contributions
+        let cleaned = message
+            // Remove signature blocks that might be in the text
+            .replace(/Tauris[\s\n]+Vyr\. AI Vadovas[\s\n]+2025-02-28/g, '')
+            // Remove typical Lithuanian acknowledgment phrases
+            .replace(/Ačiū\s+[A-Za-zĄČĘĖĮŠŲŪŽąčęėįšųūž]+\s+(už|ir).*/g, '')
+            .replace(/Dėkoju\s+[A-Za-zĄČĘĖĮŠŲŪŽąčęėįšųūž]+\s+(už|ir).*/g, '')
+            .replace(/Noriu padėkoti.*/gi, '')
+            // Remove notes about team effort
+            .replace(/Bendras\s+komandos\s+ind[ėe]lis.*/gi, '')
+            .replace(/Komandos\s+pastangomis.*/gi, '')
+            .replace(/Mūsų\s+komanda\s+atliko.*/gi, '')
+            // Remove common ending patterns
+            .replace(/Su\s+pagarba[,\s]+Tauris.*/gi, '')
+            .replace(/Pagarbiai[,\s]+Tauris.*/gi, '')
+            // Remove analysis and comments sections
+            .replace(/Galutinė analizė ir komentarai:[\s\S]*$/i, '')
+            .replace(/\d+\.\s*Sukurta aiški[\s\S]*$/i, '')
+            .replace(/Puikus komandos darbas!.*$/i, '')
+            // Clean up the result text
+            .trim();
+            
+        // Remove intro phrases - they should be at the beginning
+        cleaned = cleaned
+            .replace(/^.*?[Šš]tai galutinis [šs]io teksto variantas:?\s*/i, '')
+            .trim();
+            
+        return cleaned;
+    }
+}
+
+// Initialize on document load
+document.addEventListener('DOMContentLoaded', () => {
+    LietuviskasThinking.init();
+});
