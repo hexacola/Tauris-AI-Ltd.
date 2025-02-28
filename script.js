@@ -451,7 +451,12 @@ DABAR: Peržiūrėk VISĄ susirašinėjimo istoriją ir pateik galutinę tekstų
         // Add thinking indicator
         const thinkingId = `thinking-${Date.now()}`;
         addThinkingIndicator(worker.name, thinkingId);
-        updateStatus(`${worker.name} (${worker.model()}) is thinking...`);
+        
+        // Update status to show which iteration we're on
+        const iterationInfo = currentIteration > 0 ? 
+            ` (iteracija ${currentIteration + 1}/${maxIterations})` : 
+            '';
+        updateStatus(`${worker.name} (${worker.model()})${iterationInfo} mąsto...`);
 
         try {
             let prompt;
@@ -502,15 +507,25 @@ Tavo tekstas turėtų atitikti prašomo tipo tekstą (pvz., straipsnis, blogo į
             // Save the response to conversation history
             conversationHistory.push({
                 role: worker.name,
-                content: response
+                content: response,
+                iteration: currentIteration + 1  // Track which iteration this message belongs to
             });
 
             // Save the latest result for the final output (from each worker)
             latestResult = response;
 
-            // Add the response to the chat log
-            addMessageToChatLog(worker.name, response, worker.className);
-            updateStatus(`${worker.name} responded successfully`);
+            // Add the response to the chat log with iteration info if beyond first cycle
+            if (currentIteration > 0) {
+                addMessageToChatLog(
+                    worker.name, 
+                    response, 
+                    `${worker.className} iteration-${currentIteration + 1}`
+                );
+            } else {
+                addMessageToChatLog(worker.name, response, worker.className);
+            }
+            
+            updateStatus(`${worker.name} atsakė sėkmingai${iterationInfo}`);
 
             // Continue to the next worker
             currentWorkerIndex = (currentWorkerIndex + 1) % workerSequence.length;
@@ -523,20 +538,20 @@ Tavo tekstas turėtų atitikti prašomo tipo tekstą (pvz., straipsnis, blogo į
             // Wait a moment before the next exchange
             if (isCollaborationActive) {
                 const delayTime = Math.max(500, exchangeDelay);
-                updateStatus(`Waiting ${delayTime}ms before next response...`);
+                updateStatus(`Laukiama ${delayTime}ms prieš kitą atsakymą...`);
 
                 await new Promise(resolve => setTimeout(resolve, delayTime));
 
                 if (isCollaborationActive) {
                     continueCollaboration().catch(err => {
                         console.error("Error in collaboration continuation:", err);
-                        updateStatus(`Error: ${err.message}`, "error");
+                        updateStatus(`Klaida: ${err.message}`, "error");
 
                         setTimeout(() => {
                             if (isCollaborationActive) {
-                                addMessageToChatLog('System', 'Attempting to continue collaboration...', 'system');
+                                addMessageToChatLog('System', 'Bandome tęsti bendradarbiavimą...', 'system');
                                 continueCollaboration().catch(() => {
-                                    addMessageToChatLog('System', 'Failed to continue collaboration after multiple attempts.', 'system');
+                                    addMessageToChatLog('System', 'Nepavyko tęsti bendradarbiavimo po kelių bandymų.', 'system');
                                     stopCollaboration();
                                 });
                             }
@@ -921,30 +936,54 @@ IMPORTANT INSTRUCTIONS:
         // Make sure the topic is always included
         const topicMessage = conversationHistory.find(msg => msg.role === 'System');
         if (topicMessage) {
-            historyText += `Topic: ${topicMessage.content}\n\n`;
+            historyText += `UŽDUOTIS: ${topicMessage.content}\n\n`;
         }
+
+        // Track the current iteration number
+        const iterationNumber = currentIteration + 1;
+        const totalIterations = maxIterations;
+        historyText += `ŠI YRA ${iterationNumber}-OJI ITERACIJA IŠ ${totalIterations}.\n\n`;
 
         // Determine if we're formatting for the boss or regular worker
         const workerKey = getCurrentWorkerKey();
         const isBoss = workerKey === 'boss' || finalWorker === workerKey;
         
-        // Boss gets more context (8-12 messages), workers get last 4 messages
-        const maxMessages = isBoss ? 12 : 4;
+        // Get completed worker cycles - this helps track how many full iterations we've gone through
+        const completedCycles = Math.floor(conversationHistory.filter(msg => msg.role !== 'System').length / workerSequence.length);
         
-        // Get relevant history based on role
-        const relevantHistory = conversationHistory
-            .filter(msg => msg.role !== 'System')
-            .slice(-maxMessages);
+        // Boss gets more context (full history), workers get messages from current iteration plus previous if relevant
+        const relevantMessagesToShow = isBoss ? conversationHistory.length : 
+                                      Math.min(12, conversationHistory.length);
+        
+        // Get relevant history based on role and iteration
+        const fullHistory = conversationHistory.filter(msg => msg.role !== 'System');
+        
+        // For workers beyond the first iteration, show messages from the previous iteration too
+        const relevantHistory = iterationNumber > 1 ?
+            // Include messages from prior iteration to maintain context across cycles
+            fullHistory.slice(-relevantMessagesToShow) :
+            // For first iteration, just show recent messages
+            fullHistory.slice(-4);
+
+        // Add a note about where we are in the collaboration process
+        if (iterationNumber > 1) {
+            historyText += `MES JAU ANKSČIAU BENDRAVOME ${completedCycles} CIKLUS. DABAR TĘSIAME TOBULINIMO PROCESĄ.\n\n`;
+        }
+        
+        // Add iteration context for the worker
+        if (workerKey === 'writer' && iterationNumber > 1) {
+            historyText += `SVARBU: Kaip Jonas, tu dabar turėtum apžvelgti visą ankstesnę diskusiją ir pateikti tobulesnę versiją, įtraukiant Gabijos, Vytauto bei Eglės pastabas iš ankstesnių iteracijų.\n\n`;
+        }
 
         // Add a note if we're truncating history
-        if (conversationHistory.length > maxMessages + 1) { // +1 for the System message
-            historyText += `[${isBoss ? "Showing the most recent and important" : "Earlier conversation omitted for brevity, showing last"} ${maxMessages} messages]\n\n`;
+        if (conversationHistory.length > relevantMessagesToShow + 1) { // +1 for the System message
+            historyText += `[${isBoss ? "Rodoma visa istorija" : "Rodoma dalis istorijos"} - ${relevantHistory.length} žinutės]\n\n`;
         }
 
         // Format each message in the history
         relevantHistory.forEach((msg, index) => {
             // For boss, add timestamps to help understand conversation flow
-            const timestamp = isBoss ? `[${new Date().toLocaleTimeString()}] ` : "";
+            const timestamp = isBoss ? `[${index + 1}] ` : "";
             historyText += `${timestamp}${msg.role}: ${msg.content}\n\n`;
 
             if (index < relevantHistory.length - 1) {
@@ -952,175 +991,202 @@ IMPORTANT INSTRUCTIONS:
             }
         });
 
-        // For boss, add a summary of key contributions
-        if (isBoss) {
-            historyText += "\nKEY CONTRIBUTIONS SUMMARY:\n";
+        // Add summaries from previous iterations if we're beyond the first cycle
+        if (iterationNumber > 1 && !isBoss) {
+            historyText += "\nANKSTESNIŲ ITERACIJŲ APŽVALGA:\n";
             
-            // Find the most recent contribution from each worker
-            const workers = ['Writer', 'Researcher', 'Critic', 'Editor'];
-            workers.forEach(role => {
-                const lastMsg = conversationHistory
-                    .filter(msg => msg.role === role)
-                    .slice(-1)[0];
+            // Create a summary of key points from previous iterations
+            // Group messages by worker role from past iterations
+            const workerContributions = {};
+            workerSequence.forEach(role => {
+                const roleName = workers[role].name;
+                // Get only messages from previous iterations, not current one
+                const messagesFromPreviousIterations = conversationHistory.filter(
+                    msg => msg.role === roleName && 
+                    conversationHistory.indexOf(msg) < conversationHistory.length - relevantHistory.length
+                );
                 
-                if (lastMsg) {
-                    // Extract a brief summary (first 100-150 characters)
-                    const summary = lastMsg.content.length > 150 
-                        ? lastMsg.content.substring(0, 150) + "..."
-                        : lastMsg.content;
-                        
-                    historyText += `\n${role}: ${summary}\n`;
+                if (messagesFromPreviousIterations.length > 0) {
+                    const latestContribution = messagesFromPreviousIterations[messagesFromPreviousIterations.length - 1];
+                    workerContributions[roleName] = summarizeMessage(latestContribution.content, 200);
                 }
             });
             
-            historyText += "\nAs the Boss, your job is to review ALL contributions and create a final, coherent version.\n";
+            // Add the summaries to the history text
+            Object.entries(workerContributions).forEach(([role, summary]) => {
+                historyText += `\n${role} anksčiau sakė: "${summary}"\n`;
+            });
+            
+            historyText += "\nRemdamasis šia istorija, tęsk darbą ir tobulėk toliau.\n";
         }
 
         return historyText;
     }
 
+    // Helper function to summarize a message
+    function summarizeMessage(message, maxLength = 200) {
+        // Remove common intros/outros
+        let cleaned = message
+            .replace(/^.*?(štai ką parašiau|štai mano tekstas|peržiūrėjau tekstą|štai pataisytas tekstas).*?:/si, '')
+            .replace(/gabija.*?$/si, '')
+            .replace(/vytautas.*?$/si, '')
+            .replace(/eglė.*?$/si, '')
+            .replace(/jonas.*?$/si, '')
+            .replace(/perduodu.*?$/si, '')
+            .replace(/tikiuosi.*?$/si, '')
+            .trim();
+        
+        // If still too long, truncate and add ellipsis
+        if (cleaned.length > maxLength) {
+            cleaned = cleaned.substring(0, maxLength) + "...";
+        }
+        
+        return cleaned;
+    }
+
     // Customize the prompt based on which worker is responding
     function createWorkerPrompt(historyText, workerKey) {
         let lastMessages = {};
+        const iterationNumber = currentIteration + 1;
         
         // Find the last message from each worker to reference
         ['Writer', 'Researcher', 'Critic', 'Editor', 'Boss'].forEach(role => {
             const lastMsg = conversationHistory
                 .filter(msg => msg.role === role)
                 .slice(-1)[0];
-                
+                    
             if (lastMsg) {
                 lastMessages[role] = lastMsg.content;
             }
         });
 
+        // Add iteration awareness to each prompt
+        const iterationContext = iterationNumber > 1 ? 
+            `Tai jau ${iterationNumber}-oji iteracija. Ankstesniuose cikluose visi komandos nariai jau dirbo prie šio teksto, tad dabar reikia tęsti tobulinimą ir įtraukti ankstesnius pasiūlymus.` : 
+            `Tai pirmoji iteracija, tad pradedame darbą nuo pradžių.`;
+
         switch (workerKey) {
+            case 'writer':
+                return `${historyText}
+
+Dabar Tu esi Jonas, rašytojas. ${iterationContext}
+
+${iterationNumber > 1 ? 
+    `SVARBU: Peržiūrėk VISĄ ankstesnių iteracijų istoriją. Šiame naujame cikle, tavo tikslas - sukurti dar tobulesnę teksto versiją, atsižvelgiant į visus ankstesnius patobulinimus, Gabijos surastus faktus, Vytauto kritiką ir Eglės redagavimus.
+    
+    Kaip rašytojas, šį kartą tavo pareiga:
+    1. Apžvelgti visą ankstesnę diskusiją ir suprasti, kaip tekstas evoliucionavo
+    2. Integruoti geriausias idėjas iš praėjusių ciklų
+    3. Ištaisyti likusius trūkumus, kuriuos pastebėjo Vytautas ar Eglė
+    4. Išlaikyti mokslinę informaciją, kurią pridėjo Gabija
+    5. Sukurti dar geresnę, nuoseklesnę ir aiškesnę teksto versiją` :
+    
+    `Tavo užduotis:
+    1. Sukurti pradinį tekstą pagal užduotį
+    2. Suteikti jam aiškią struktūrą ir stilių
+    3. Užtikrinti, kad tekstas būtų aiškus, įdomus ir informatyvus
+    4. Pabaigoje perduoti darbą Gabijai tolesniam tobulinimui su faktais`
+}
+
+SVARBU: ${iterationNumber > 1 ? 
+    `Tai nėra visiškai naujas tekstas - tai ankstesnio darbo tęsinys ir tobulinimas. Parodyk, kad supratai ankstesnius komentarus ir kaip tekstas tobulėjo.` : 
+    `Rašyk kaip Jonas, lietuviškai, natūralia kalba, ir nevartok angliškų frazių.`}`;
+
             case 'researcher':
                 return `${historyText}
 
-Dabar Tu esi Gabija, tyrėja. Peržiūrėk visus ankstesnius komentarus, ypač Jono (${lastMessages['Writer'] ? 'kuris rašė: "' + lastMessages['Writer'].substring(0, 100) + '..."' : 'paskutinį komentarą'}).
+Dabar Tu esi Gabija, tyrėja. ${iterationContext}
 
-Tavo užduotis:
-1. Papildyk tekstą moksliniais faktais ir akademinėmis nuorodomis
-2. Atlik papildomus tyrimus internete, jei reikia
-3. Pateik tikslias nuorodas į šaltinius su URL adresais
-4. Išlaikyk pagrindinę teksto struktūrą, bet pridėk vertingos informacijos
+${iterationNumber > 1 ? 
+        `Ankstesnėse iteracijose jau atlikote tyrimą, tačiau dabar reikia jį papildyti ir patobulinti, atsižvelgiant į naujausią Jono pateiktą tekstą.
+        
+        Kaip tyrėja, šį kartą tavo pareiga:
+        1. Patikrinti ir atnaujinti šaltinius, kuriuos pateikei anksčiau
+        2. Surasti NAUJUS faktus ir šaltinius, kurie dar labiau pagerintų tekstą
+        3. Išlaikyti geriausią informaciją iš ankstesnių iteracijų
+        4. Reaguoti į naujausią Jono teksto versiją, įvertinant, ar jis teisingai įtraukė tavo anksčiau pateiktus faktus` :
+        
+        `Tavo užduotis:
+        1. Papildyk tekstą moksliniais faktais ir akademinėmis nuorodomis
+        2. Atlik papildomus tyrimus internete, jei reikia
+        3. Pateik tikslias nuorodas į šaltinius su URL adresais
+        4. Išlaikyk pagrindinę teksto struktūrą, bet pridėk vertingos informacijos`
+    }
 
-SVARBU: Reaguok į ankstesnį tekstą, išlaikydama kontekstą ir tęsdama mintį. Tavo tekstas turi būti sklandus tęsinys ankstesnių dalyvių darbų.`;
+SVARBU: ${iterationNumber > 1 ? 
+        `Naudokis savo prieiga prie interneto, kad surinktum naujausius ir tiksliausius faktus. Paminėk, kaip nauji faktai papildo ar patikslina ankstesnius.` : 
+        `Reaguok į Jono tekstą, išlaikydama kontekstą ir tęsdama mintį. Tavo tekstas turi būti sklandus tęsinys.`}`;
 
             case 'critic':
                 return `${historyText}
 
-Dabar Tu esi Vytautas, kritikas. Peržiūrėk visus ankstesnius komentarus, ypač Gabijos (${lastMessages['Researcher'] ? 'kuris rašė: "' + lastMessages['Researcher'].substring(0, 100) + '..."' : 'paskutinį komentarą'}).
+Dabar Tu esi Vytautas, kritikas. ${iterationContext}
 
-Tavo užduotis:
-1. Įvertink teksto stiprybes (aiškumą, originalumą, įtaigą)
-2. Nurodyk tobulintinas vietas (struktūra, argumentacija, kalbos vartojimas)
-3. Pasiūlyk konkrečius patobulinimus
-4. Pateik bendrą įvertinimą
+${iterationNumber > 1 ? 
+        `Tu jau anksčiau kritiškai įvertinai tekstą, tačiau dabar reikia peržiūrėti naujausią Gabijos papildytą versiją ir įvertinti, kaip tekstas tobulėja per iteracijas.
+        
+        Kaip kritikas, šį kartą tavo pareiga:
+        1. Palyginti dabartinę versiją su ankstesnėmis iteracijomis
+        2. Įvertinti, ar buvo atsižvelgta į tavo ankstesnes pastabas
+        3. Pateikti konkrečius pasiūlymus, kaip tekstas galėtų būti dar labiau patobulintas
+        4. Ypač atkreipti dėmesį į argumentų nuoseklumą ir šaltinių naudojimą` :
+        
+        `Tavo užduotis:
+        1. Įvertink teksto stiprybes (aiškumą, originalumą, įtaigą)
+        2. Nurodyk tobulintinas vietas (struktūra, argumentacija, kalbos vartojimas)
+        3. Pasiūlyk konkrečius patobulinimus
+        4. Pateik bendrą įvertinimą`
+    }
 
-SVARBU: Analizuok teksto logiką, struktūrą, argumentus ir šaltinių naudojimą. Tavo kritika turi būti konstruktyvi ir pagrįsta.`;
+SVARBU: ${iterationNumber > 1 ? 
+        `Išlaikyk konstruktyvų požiūrį ir parodyk, kaip tekstas tobulėja per iteracijas. Atkreipk dėmesį tiek į tai, kas pagerėjo, tiek į tai, ką dar reikia tobulinti.` : 
+        `Analizuok teksto logiką, struktūrą, argumentus ir šaltinių naudojimą. Tavo kritika turi būti konstruktyvi ir pagrįsta.`}`;
 
             case 'editor':
                 return `${historyText}
 
-Dabar Tu esi Eglė, redaktorė. Peržiūrėk visus ankstesnius komentarus, ypač Vytauto kritiką (${lastMessages['Critic'] ? 'kuris rašė: "' + lastMessages['Critic'].substring(0, 100) + '..."' : 'paskutinį komentarą'}).
+Dabar Tu esi Eglė, redaktorė. ${iterationContext}
 
-Tavo užduotis:
-1. Identifikuok ir ištaisyk gramatines, skyrybos ir stilistines klaidas
-2. Patobulink teksto struktūrą ir rišlumą
-3. Užtikrink, kad tekstas yra aiškus, nuoseklus ir profesionalus
-4. Pateik galutinę, išbaigtą versiją
+${iterationNumber > 1 ? 
+        `Tu jau anksčiau redagavai šį tekstą, tačiau dabar reikia peržiūrėti naujausią Vytauto kritikuotą versiją ir patobulinti tekstą dar labiau, atsižvelgiant į visą evoliuciją per iteracijas.
+        
+        Kaip redaktorė, šį kartą tavo pareiga:
+        1. Patikrinti, ar ankstesnės tavo redakcijos buvo išlaikytos naujoje versijoje
+        2. Išlaikyti visus gerus pakeitimus iš ankstesnių iteracijų
+        3. Ištaisyti bet kokias naujas klaidas ar netikslumus
+        4. Užtikrinti teksto vientisumą ir nuoseklumą per visas iteracijas` :
+        
+        `Tavo užduotis:
+        1. Identifikuok ir ištaisyk gramatines, skyrybos ir stilistines klaidas
+        2. Patobulink teksto struktūrą ir rišlumą
+        3. Užtikrink, kad tekstas yra aiškus, nuoseklus ir profesionalus
+        4. Pateik galutinę, išbaigtą versiją`
+    }
 
-SVARBU: Išlaikyk originalias idėjas ir temas, bet ištaisyk klaidas ir pagerinimus pagal Vytauto kritiką.`;
-
-            case 'writer':
-                return `${historyText}
-
-Dabar Tu esi Jonas, rašytojas. Peržiūrėk visus ankstesnius komentarus, ypač Eglės patobulintą tekstą (${lastMessages['Editor'] ? 'kuris rašė: "' + lastMessages['Editor'].substring(0, 100) + '..."' : 'paskutinį komentarą'}).
-
-Tavo užduotis:
-1. Sukurk naują patobulintą versiją, atsižvelgdamas į visus ankstesnius komentarus
-2. Išlaikyk ir patobulink teksto stilių bei struktūrą
-3. Užtikrink, kad tekstas yra aiškus, įdomus ir informatyvus
-4. Pabaigoje perduok darbą Gabijai tolesniam tobulinimui
-
-SVARBU: Tai yra nauja iteracija, tad tobulini ir plėtoji jau egzistuojančias idėjas, o ne pradedi nuo pradžių.`;
+SVARBU: ${iterationNumber > 1 ? 
+        `Tekstas turėtų su kiekviena iteracija tapti vis geresnis. Parodyk, kaip tavo redagavimas prisideda prie teksto tobulėjimo laiko eigoje.` : 
+        `Išlaikyk originalias idėjas ir temas, bet ištaisyk klaidas ir pagerinimus pagal Vytauto kritiką.`}`;
 
             case 'boss':
                 return `${historyText}
 
-Dabar Tu esi Tauris, biuro šefas ir galutinis prižiūrėtojas. Peržiūrėk VISĄ susirašinėjimo istoriją (ypač perskaityk visus Jono, Gabijos, Vytauto ir Eglės komentarus).
+Dabar Tu esi Tauris, biuro šefas ir galutinis prižiūrėtojas. Tu matai VISĄ bendradarbiavimo procesą per ${iterationNumber} iteracijas.
 
 Tavo užduotis:
 1. Apjunk visų darbuotojų geriausias idėjas ir įžvalgas į vieną nuoseklų tekstą
-2. Užtikrink, kad galutinis variantas turi aiškią struktūrą: įvadą, pagrindinę dalį ir išvadas
-3. Įtrauk Gabijos pateiktus faktus ir šaltinius
-4. Atsižvelk į Vytauto kritiką ir siūlomus patobulinimus
-5. Išlaikyk Eglės kalbos ir stiliaus pataisymus
+2. Parodyk, kaip tekstas tobulėjo per visas iteracijas
+3. Užtikrink, kad galutinis variantas turi aiškią struktūrą: įvadą, pagrindinę dalį ir išvadas
+4. Įtrauk Gabijos pateiktus faktus ir šaltinius iš visų iteracijų
+5. Atsižvelk į Vytauto kritiką ir siūlomus patobulinimus per visą procesą
+6. Išlaikyk Eglės kalbos ir stiliaus pataisymus iš visų iteracijų
 
-SVARBU: Kaip šefas, tu turi matyti visą bendrą vaizdą ir užtikrinti, kad galutinis tekstas yra aukščiausios kokybės.
+SVARBU: Kaip šefas, tu turi matyti visą bendrą vaizdą ir užtikrinti, kad galutinis tekstas yra aukščiausios kokybės, atspindintis visą komandos darbo evoliuciją.
 
-Pradėk: "Ačiū visiems už įdėtą darbą! Peržiūrėjęs visą susirašinėjimo istoriją, pateikiu galutinę šio teksto versiją:"`;
+Pradėk: "Ačiū visiems už įdėtą darbą per ${iterationNumber} iteracijas! Peržiūrėjęs visą bendradarbiavimo istoriją, pateikiu galutinę šio teksto versiją:"`;
 
             default:
                 return historyText;
         }
-    }
-
-    // Extract the final result from the last writer's contribution
-    function extractFinalResult() {
-        // Try to use the editor's final contribution when possible
-        const contributions = conversationHistory.filter(msg =>
-            msg.role !== 'System' && msg.content && msg.content.length > 100
-        );
-
-        // Get the last substantive contribution (from Editor if possible)
-        const lastEditorMsg = contributions
-            .filter(msg => msg.role === 'Editor')
-            .slice(-1)[0];
-
-        if (lastEditorMsg) {
-            // Extract just the document content, removing conversational parts
-            const content = lastEditorMsg.content;
-
-            // Remove common opening phrases
-            let cleanText = content
-                .replace(/^.*(štai pataisytas tekstas|štai galutinė versija|štai kaip pataisiau|peržiūrėjau tekstą).*?:/si, '')
-                .replace(/^.*?(štai rezultatas|pataisiau tekstą).*?:/si, '')
-                .trim();
-
-            // Remove common closing phrases
-            cleanText = cleanText
-                .replace(/tikiuosi, kad šis tekstas.*?$/si, '')
-                .replace(/linkiu sėkmės.*?$/si, '')
-                .replace(/perduodu šį tekstą.*?$/si, '')
-                .replace(/ačiū už galimybę.*?$/si, '')
-                .replace(/esu pasiruošusi atsakyti.*?$/si, '')
-                .trim();
-
-            return cleanText;
-        }
-
-        // Fallback to writer's text if editor's isn't available
-        const lastWriterMsg = contributions
-            .filter(msg => msg.role === 'Writer')
-            .slice(-1)[0];
-
-        if (lastWriterMsg) {
-            // Extract just the document content from writer's text
-            const content = lastWriterMsg.content;
-
-            return content
-                .replace(/^.*?(štai ką parašiau|štai mano tekstas|parašiau tokį tekstą).*?:/si, '')
-                .replace(/^.*?(štai mano juodraštis|štai pradinis variantas).*?:/si, '')
-                .replace(/gabija[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
-                .replace(/perduodu.*?$/si, '')
-                .trim();
-        }
-
-        // If no identifiable messages found, fall back to the original method
-        return cleanUpFinalResult(conversationHistory[conversationHistory.length - 1]?.content || "");
     }
 
     // Clean up the final result text to remove role intros and outros
