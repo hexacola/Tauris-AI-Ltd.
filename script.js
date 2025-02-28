@@ -89,8 +89,9 @@ SVARBU: Kalbi ir rašai nepriekaištinga lietuvių kalba su akademiniu žodynu i
 
 Kaip profesionali tyrėja, tu:
 - **PRIVALAI naudotis internetu, kad surastum REALIUS, TIKSLIUS ir PATIKIMUS faktus bei šaltinius**
-- **PRIVALAI visada pateikti konkrečias nuorodas į šaltinius su URL adresais arba tikslias citatas iš akademinių šaltinių**
-- **NIEKADA neišgalvok neegzistuojančių faktų ar šaltinių - visada remkis tikrais duomenimis**
+- **PRIVALAI visada pateikti konkrečias nuorodas į šaltinius su URL adresais, kuriuos PATIKRINK, kad jie TIKRAI EGZISTUOJA**
+- **NIEKADA neišgalvok neegzistuojančių šaltinių - geriau nurodyk mažiau šaltinių, bet tikrus**
+- **Jei pateiki akademinį šaltinį, užtikrink, kad jis tikrai egzistuoja ir būtų galima jį surasti Google Scholar ar akademinėse duomenų bazėse**
 - Logiškai struktūruoji tyrimą, remiantis lietuviška moksline metodologija
 - Aiškinai sudėtingas sąvokas paprastai, bet tiksliai
 - Naudoji tikslią lietuvišką terminologiją savo srityje
@@ -1119,7 +1120,9 @@ ${iterationNumber > 1 ?
 
 SVARBU: ${iterationNumber > 1 ? 
         `Naudokis savo prieiga prie interneto, kad surinktum naujausius ir tiksliausius faktus. Paminėk, kaip nauji faktai papildo ar patikslina ankstesnius.` : 
-        `Reaguok į Jono tekstą, išlaikydama kontekstą ir tęsdama mintį. Tavo tekstas turi būti sklandus tęsinys.`}`;
+        `Reaguok į Jono tekstą, išlaikydama kontekstą ir tęsdama mintį. Tavo tekstas turi būti sklandus tęsinys.`}
+
+YPATINGAI SVARBU: Naudok savo interneto prieigą, kad patikrintum faktus. Pateik TIK TIKRUS šaltinius su veikiančiais URL. Jei negali patikrinti šaltinio, geriau jo nepateik. Tavo užduotis - pridėti vertingų, PATIKIMŲ faktų iš tikrų šaltinių.`;
 
             case 'critic':
                 return `${historyText}
@@ -1183,11 +1186,18 @@ Tavo užduotis:
 4. Atsižvelk į Vytauto kritiką ir siūlomus patobulinimus per visą procesą
 5. Išlaikyk Eglės kalbos ir stiliaus pataisymus iš visų iteracijų
 
-LABAI SVARBU: Tavo atsakyme pateik TIK galutinį tekstą, nepridedant jokios analizės ar komentarų. NEPRIDĖK JOKIŲ PUNKTŲ APIE TEKSTO KOKYBĘ. 
+LABAI SVARBU: Tavo atsakyme pateik TIK galutinį tekstą, nepridedant jokios analizės ar komentarų. NEPRIDĖK JOKIŲ PUNKTŲ APIE TEKSTO KOKYBĘ AR STRUKTŪRĄ. 
 
 NEPRIDĖK sekcijų kaip "Galutinė analizė" ar "Komentarai" - pateik tik patį išbaigtą tekstą, kurį klientas gaus kaip galutinį produktą.
 
-Pradėk: "Štai galutinis šio teksto variantas:"`;
+Pradėk: "Štai galutinis šio teksto variantas:"
+
+Šefas Tauris, atkreipk dėmesį į šiuos svarbius aspektus:
+1. Gabijos pateiktus mokslinius faktus ir šaltinius - jie suteikia tekstui patikimumo
+2. Vytauto nurodytus struktūros patobulinimus - jie padeda geriau organizuoti mintis
+3. Eglės kalbos sklandumo patobulinimus - jie padaro tekstą lengviau skaitomą
+
+Išlaikyk nuoseklią struktūrą ir profesionalų toną, tačiau nevartok pernelyg akademiškų terminų, kurie apsunkintų teksto supratimą.`;
 
         default:
             return historyText;
