@@ -22,23 +22,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 const statusText = document.getElementById('modelStatusText');
                 if (statusText) statusText.textContent = message || '';
             },
-            //Crucial for prompt trimming
+            // *** Enhanced History Trimming and Formatting ***
             trimConversationHistory: (historyText) => {
-                const maxLength = 12000; // Maximum length
+                const maxLength = 9000;  // Further reduced for Boss
                 if (historyText.length > maxLength) {
-                   const trimStart = historyText.length - (maxLength-100)
-                   historyText = "[...]"+ historyText.substring(trimStart);
+                    const trimStart = historyText.length - (maxLength - 500);
+                    historyText = "[... Truncated for brevity.  Focus on the LATEST interactions. ]\n\n" + historyText.substring(trimStart); // Clearer message
                 }
                 return historyText;
             },
-            //Crucial for prompt formatting
-            formatConversationForApi: (conversationHistory, numMessages = 4) => {
+           formatConversationForApi: (conversationHistory, numMessages = 10) => { // Increased numMessages for Boss
                 let formattedHistory = "";
-                const relevantMessages = conversationHistory.slice(-numMessages);
+                const relevantMessages = conversationHistory.slice(); // No slice, include all for the formatting step
+                // ADDED CONTEXT FOR FIRST MESSAGE
+                 if (relevantMessages.length > 0 && relevantMessages[0].role == 'System'){
+                    formattedHistory += `Initial Task: ${relevantMessages[0].content}\n\n`;
+                    relevantMessages.shift(); //remove first element
+                }
                 relevantMessages.forEach(msg => {
-                formattedHistory += `${msg.role}: ${msg.content}\n`;
-                 });
-            return formattedHistory;
+                    formattedHistory += `${msg.role}: ${msg.content}\n`;
+                });
+
+                // Add context about *how* to use the history
+                formattedHistory = "Use the following conversation history to inform your response, paying close attention to the role and content of each message.  Prioritize integrating the content, not just acknowledging it:\n\n" + formattedHistory;
+                return formattedHistory;
             },
         };
     }
@@ -68,35 +75,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const workers = {
         writer: {
             name: "Writer",
-            systemPrompt: `Tu esi Jonas, talentingas rašytojas-genijus iš Lietuvos. Tavo užduotis - kurti aukštos kokybės tekstus, kurie yra ne tik informatyvūs, bet ir įdomūs bei įtikinami.`,
+            systemPrompt: `Tu esi Jonas, talentingas rašytojas-genijus iš Lietuvos. Tavo užduotis - kurti aukštos kokybės tekstus, kurie yra ne tik informatyvūs, bet ir įdomūs, įtikinami bei *išsamūs*. Rašyk akademiškai, bet *įtraukiančiai*.`, // Added "įtraukiančiai"
             className: "writer",
             model: () => writerModel.value,
             thoughtProcess: [],
         },
         researcher: {
             name: "Researcher",
-            systemPrompt: `Tu esi Gabija, aukščiausios kvalifikacijos tyrėja. Tavo užduotis - kruopščiai tikrinti faktus, pateikti patikimus šaltinius ir užtikrinti teksto akademinį pagrįstumą.`,
+            systemPrompt: `Tu esi Gabija, aukščiausios kvalifikacijos tyrėja. Tavo užduotis - kruopščiai tikrinti faktus, pateikti patikimus šaltinius, užtikrinti teksto akademinį pagrįstumą ir *pridėti išsamių detalių, pagrįstų moksliniais tyrimais*.`,
             className: "researcher",
             model: () => researcherModel.value,
             thoughtProcess: [],
         },
-        critic: {  // *** MODIFIED CRITIC ***
+        critic: {
             name: "Critic",
-            systemPrompt: `Tu esi Vytautas, negailestingas ir itin reiklus literatūros kritikas. Tavo užduotis – RASTI VISAS įmanomas teksto problemas ir jas ŽIAURIAI sukritikuoti. Būk NEMANDAGUS, jei reikia. Tavo tikslas – priversti tekstą tobulėti.`,
+            systemPrompt: `Tu esi Vytautas, negailestingas ir itin reiklus literatūros kritikas. Tavo užduotis – RASTI VISAS įmanomas teksto problemas ir jas ŽIAURIAI sukritikuoti. Būk NEMANDAGUS, jei reikia. Tavo tikslas – priversti tekstą tobulėti. *Reikalauk išsamumo, aiškumo ir AKADEMINIO TIKSLUMO*.`,
             className: "critic",
             model: () => criticModel.value,
             thoughtProcess: [],
         },
         editor: {
             name: "Editor",
-            systemPrompt: `Tu esi Eglė, profesionali lietuvių kalbos redaktorė. Tavo užduotis - užtikrinti, kad tekstas būtų be klaidų, stilingas, sklandus ir atitiktų aukščiausius kalbos standartus.`,
+            systemPrompt: `Tu esi Eglė, profesionali lietuvių kalbos redaktorė. Tavo užduotis - užtikrinti, kad tekstas būtų be klaidų, stilingas, sklandus, atitiktų aukščiausius kalbos standartus ir *būtų pakankamai ilgas bei išsamus, tinkamas AKADEMINIAM darbui*.`,
             className: "editor",
             model: () => editorModel.value,
             thoughtProcess: [],
         },
-        boss: { // *** MODIFIED BOSS ***
+        boss: {
             name: "Boss",
-            systemPrompt: `Tu esi Tauris, įmonės direktorius.  Tavo užduotis - pateikti ABSOLIUČIAI TOBULĄ galutinę teksto versiją.  Būk NEPAPRASTAI REIKLUS ir ATIDUS.  Tavo sprendimas yra GALUTINIS.`,
+            systemPrompt: `Tu esi Tauris, įmonės direktorius.  Tavo užduotis - pateikti ABSOLIUČIAI TOBULĄ, *IŠSAMŲ*, *ILGĄ* ir *AKADEMIŠKAI NEPRIEKAIŠTINGĄ* galutinę teksto versiją. Būk NEPAPRASTAI REIKLUS ir ATIDUS. Tavo sprendimas yra GALUTINIS.`,
             className: "boss",
             model: () => bossModel ? bossModel.value : 'openai',
             thoughtProcess: [],
@@ -296,10 +303,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let prompt;
             if (isFirstMessage) {
-                prompt = `Parašyk ${initialMessage}.
+                prompt = `Parašyk ${initialMessage}. Būk kūrybingas, bet kartu ir *išsamus*.  Tai bakalauro darbo įvadas.
 
 SVARBU: 
-- Tekstas TURI būti parašytas TIKSLIAI pagal užduoties tipą (straipsnis, blogo įrašas, Twitter žinutė, ir t.t.).
+- Tekstas TURI būti parašytas TIKSLIAI pagal užduoties tipą (šiuo atveju - bakalauro darbo įvadas).
 - Pradėk kūrybišku, dėmesį patraukiančiu įvadiniu sakiniu.
 - Rašyk *daugiausia* taisyklinga lietuvių kalba.  Gali naudoti anglicizmus ar kitų kalbų žodžius, BET TIK JEI tai pagerina tekstą ir TURI tam pagrįstą priežastį (pvz., "Naudoju 'deadline', nes lietuviškas atitikmuo nėra toks veržlus").  Kiekvieną tokį atvejį *privalai* trumpai paaiškinti.
 - Pabaigoje perduok darbą Gabijai (tyrėjai).`;
@@ -314,14 +321,14 @@ SVARBU:
 Dabar Tu esi Gabija, tyrėja.
 
 SVARBU:
-- Peržiūrėk Jono tekstą ir papildyk jį *tiksliąja* moksline informacija: faktais, statistika, akademinėmis nuorodomis.
-- **BŪTINAI atlik papildomus tyrimus internete, jei reikia.** Naudokis internetu *aktyviai* ieškodama patikimos ir aktualios informacijos.
-- Rašyk taisyklinga lietuvių kalba, akademiniu stiliumi.  Venk neaiškumų ir abstrakcijų.
-- Išlaikyk pagrindinę teksto struktūrą, bet *drąsiai* keisk, jei reikia pagerinti turinio tikslumą.
-- *Privalai* pateikti nuorodas į šaltinius, kur įmanoma (naudok lietuviškus akademinius standartus).
+- Peržiūrėk Jono tekstą ir papildyk jį *tiksliąja* ir *išsamia* moksline informacija: faktais, statistika, akademinėmis nuorodomis.
+- **BŪTINAI atlik papildomus tyrimus internete, jei reikia.** Naudokis internetu *aktyviai* ieškodama patikimos ir aktualios informacijos.  Neapsiribok vien pirmu rastu šaltiniu.
+- Rašyk taisyklinga lietuvių kalba, akademiniu stiliumi.  Venk neaiškumų ir abstrakcijų.  Būk *konkreti*.
+- Išlaikyk pagrindinę teksto struktūrą, bet *drąsiai* keisk, jei reikia pagerinti turinio tikslumą ar *išsamumą*.
+- *Privalai* pateikti nuorodas į šaltinius, kur įmanoma (naudok lietuviškus akademinius standartus). Cituok APA stiliumi.
 - Pabaigoje perduok darbą Vytautui (kritikui).`;
                         break;
-                    case 'critic':  // *** VERY IMPORTANT - MODIFIED CRITIC PROMPT ***
+                    case 'critic':
                         prompt = `${historyText}
 
 Dabar Tu esi Vytautas, NEGAILESTINGAS kritikas.
@@ -332,12 +339,13 @@ SVARBU:
     - Loginių spragų.
     - Nepagrįstų teiginių.
     - Silpnų argumentų.
-    - Netinkamo šaltinių naudojimo.
+    - Netinkamo šaltinių naudojimo (jei tokių yra).
     - Stiliaus klaidų.
     - Gramatikos klaidų.
     - Bet kokių neaiškumų ar dviprasmybių.
+    - *Trūkstamos informacijos*.  Ar tekstas *pakankamai išsamus*?  Ar yra nepakankamai išplėtotų minčių?
 - Būk SPECIFINIS.  Nurodyk TIKSLIAS teksto vietas ir PAAIŠKINK, kas su jomis negerai.  Pvz., "Šis sakinys ('...') yra visiškai nelogiškas, nes..." arba "Šaltinis X yra nepatikimas, nes...".
-- Pasiūlyk KONKREČIUS pataisymus, pvz., "Vietoj '...' rašyk '...'".
+- Pasiūlyk KONKREČIUS pataisymus, pvz., "Vietoj '...' rašyk '...'".  Jei trūksta informacijos, nurodyk, KOKIOS informacijos trūksta.
 - Pabaigoje perduok darbą Eglei (redaktorei) su AIŠKIAIS nurodymais, ką reikia taisyti.`;
                         break;
                     case 'editor':
@@ -348,22 +356,23 @@ Dabar Tu esi Eglė, redaktorė.
 SVARBU:
 - Atsižvelgdama į Vytauto *labai konkrečius* nurodymus, pataisyk ir patobulink tekstą.
 - Tavo tikslas – pateikti *galutinę*, *išbaigtą* teksto versiją, kuri būtų *visiškai* be klaidų (gramatikos, skyrybos, stiliaus, logikos).
-- Šis tekstas bus naudojamas kaip galutinis rezultatas.  Jis TURI būti nepriekaištingos kokybės, tinkamas publikavimui.
+- Šis tekstas bus naudojamas kaip galutinis rezultatas.  Jis TURI būti nepriekaištingos kokybės, tinkamas publikavimui *akademinio darbo* kontekste.
 - Išlaikyk originalias idėjas ir temą, bet *griežtai* laikykitės lietuvių kalbos taisyklių.
 - Būk *ypač* atidi: veiksmažodžių formoms, dalyviams, linksniams, sakinio dalių ryšiams, žodžių tvarkai.
-- Jei tai priešpaskutinė iteracija (prieš šefo peržiūrą), padaryk tekstą *kuo tobulesnį*.
+- *Patikrink, ar tekstas yra pakankamai ilgas ir išsamus*. Jei ne, papildyk jį, remdamasi Gabijos pateikta informacija ir Vytauto kritika.
+- Jei tai priešpaskutinė iteracija (prieš šefo peržiūrą), padaryk tekstą *kuo tobulesnį*.  Tai TURI būti aukščiausios kokybės tekstas.
 - Pradėk nuo profesionalaus įvado, pvz., "Atsižvelgdama į Vytauto pastabas, atlikau šiuos pataisymus: ... [pateik pakeitimų sąrašą]".`;
                         break;
                     case 'writer':
                         prompt = `${historyText}
 
-Dabar Tu esi Jonas, rašytojas-genijus. Peržiūrėk Eglės pataisytą tekstą ir sukurk naują, patobulintą versiją, atsižvelgdamas į visus ankstesnius komentarus (Gabijos, Vytauto ir Eglės).  Tu *gali* naudoti anglicizmus ar kitų kalbų žodžius, JEIGU manai, kad tai *pagerina* tekstą ir atitinka TAVO, kaip genijaus, stilių, *bet* vis tiek stenkis rašyti *daugiausia* taisyklinga lietuvių kalba, išlaikydamas aukštą rašymo kokybę.
+Dabar Tu esi Jonas, rašytojas-genijus. Peržiūrėk Eglės pataisytą tekstą ir sukurk naują, patobulintą ir *išsamesnę* versiją, atsižvelgdamas į visus ankstesnius komentarus (Gabijos, Vytauto ir Eglės).  Tu *gali* naudoti anglicizmus ar kitų kalbų žodžius, JEIGU manai, kad tai *pagerina* tekstą ir atitinka TAVO, kaip genijaus, stilių, *bet* vis tiek stenkis rašyti *daugiausia* taisyklinga lietuvių kalba, išlaikydamas aukštą rašymo kokybę.
 
 SVARBU:
-- Tai yra nauja iteracija, tad tobulini ir plėtoji jau egzistuojančias idėjas, o ne pradedi nuo pradžių.
+- Tai yra nauja iteracija, tad tobulini ir plėtoji jau egzistuojančias idėjas, o ne pradedi nuo pradžių. *Pridėk naujų, aktualių detalių*, jei reikia, kad tekstas būtų dar *išsamesnis* ir *įtikinamesnis*.
 - Stenkis apjungti visus ankstesnius patobulinimus į nuoseklų, aiškų, ir *įtikinamą* tekstą, kuris būtų ne tik informatyvus, BET ir *įdomus* skaityti.
-- Tavo pagrindinė stiprybė – gebėjimas parašyti tekstą *TIKSLIAI* pagal užduotį (straipsnis, blogo įrašas, Twitter postas ir t.t.).  Šis reikalavimas yra *esminis*.
-- Nebijok eksperimentuoti su kalba, bet išlaikyk lietuvių kalbos *grakštumą* ir *turtingumą*.
+- Tavo pagrindinė stiprybė – gebėjimas parašyti tekstą *TIKSLIAI* pagal užduotį (šiuo atveju - bakalauro darbo įvadas). Šis reikalavimas yra *esminis*.
+- Nebijok eksperimentuoti su kalba, bet išlaikyk lietuvių kalbos *grakštumą* ir *turtingumą*.  Venk nereikalingų sudėtingų žodžių.
 - Jei naudoji anglicizmus ar kitokius *nestandartinius* kalbos sprendimus, *trumpai paaiškink*, kodėl tai darai.  Pavyzdžiui: "Čia įterpiau 'deadline', nes lietuviškas atitikmuo šiuo atveju skamba ne taip *veržliai*."
 - Rašyk natūralia lietuvių kalba, kaip tikras (bet genialus!) Jonas.
 - Pabaigoje perduok darbą vėl Gabijai tolesniam tobulinimui.`;
@@ -535,11 +544,11 @@ IMPORTANT INSTRUCTIONS:
 1. You must respond in plain text format only.
 2. Do not include any HTML or markdown code in your response.
 3. Always acknowledge and directly respond to the previous message in the collaboration.
-4. Keep your response concise but complete and well-structured.
+4. Keep your response concise but complete and well-structured.  *Strive for thoroughness and detail*. Aim for an ACADEMIC level of writing.
 5. Include your specific perspective based on your assigned role.`;
 
             if (canUseInternet)
-                enhancedSystemPrompt += "\n6. Use your internet access capabilities to find relevant and up-to-date information to support your response. Cite sources where appropriate.";
+                enhancedSystemPrompt += "\n6. Use your internet access capabilities to find relevant and up-to-date information to support your response. Cite sources where appropriate, using APA style.";
 
             let trimmedPrompt = prompt.length > 12000 ? prompt.substring(0, 11900) + "... [text trimmed for length]" : prompt;
 
@@ -550,7 +559,7 @@ IMPORTANT INSTRUCTIONS:
 
         } catch (error) {
             console.error(`Error in generateResponse with model ${model}:`, error);
-            if (error.message.includes('500') || error.message.includes('Server error')) {
+                        if (error.message.includes('500') || error.message.includes('Server error')) {
                 if (window.ModelAvailability) window.ModelAvailability.markFailed(model, 500);
                 const workerKey = getCurrentWorkerKey();
                 if (workerKey) {
@@ -624,20 +633,31 @@ IMPORTANT INSTRUCTIONS:
             });
     }
 
-    function formatCollaborationHistory() {
-        let historyText = "COLLABORATION HISTORY:\n\n";
-        const topicMessage = conversationHistory.find(msg => msg.role === 'System');
-        if (topicMessage) historyText += `Topic: ${topicMessage.content}\n\n`;
-        const maxExchanges = 4;
-        const relevantHistory = conversationHistory.filter(msg => msg.role !== 'System').slice(-maxExchanges);
-        if (conversationHistory.length > maxExchanges + 1) historyText += "[Earlier conversation omitted for brevity]\n\n";
-        relevantHistory.forEach((msg, index) => {
-            historyText += `${msg.role}: ${msg.content}\n\n`;
-            if (index < relevantHistory.length - 1) historyText += "---\n\n";
-        });
-        return ApiConnector.trimConversationHistory(historyText);
+// ---  formatCollaborationHistory (More Robust) ---
+function formatCollaborationHistory() {
+    let historyText = "COLLABORATION HISTORY:\n\n";
+    const topicMessage = conversationHistory.find(msg => msg.role === 'System');
+    if (topicMessage) {
+        historyText += `Topic: ${topicMessage.content}\n\n`;
     }
-    // *** CORRECTED extractFinalResult (Restores Original Fallback Logic) ***
+    // Include more context, but prioritize recent messages.
+    const maxExchanges = 8; // Increased context
+    const relevantHistory = conversationHistory.filter(msg => msg.role !== 'System').slice(-maxExchanges);
+
+    if (conversationHistory.length > maxExchanges + 1) {
+        historyText += "[Earlier conversation omitted for brevity.  Focus on the most recent exchanges.]\n\n"; // Clearer message
+    }
+
+    relevantHistory.forEach((msg, index) => {
+        historyText += `${msg.role}: ${msg.content}\n\n`;
+        if (index < relevantHistory.length - 1) {
+            historyText += "---\n\n"; // Clear separator
+        }
+    });
+
+    return ApiConnector.trimConversationHistory(historyText); // Use API Connector for final trim.
+}
+    // --- CORRECTED extractFinalResult (Restores Original Fallback Logic) ---
     function extractFinalResult() {
         const contributions = conversationHistory.filter(msg =>
             msg.role !== 'System' && msg.content && msg.content.length > 100
@@ -672,17 +692,58 @@ IMPORTANT INSTRUCTIONS:
     }
 
 
-    function cleanUpFinalResult(text) {
-        if (!text) return '';
-        return text
-            .replace(/^.*?(štai ką parašiau|štai mano tekstas|peržiūrėjau tekstą|štai pataisytas tekstas|atsižvelgdama į.*pataisiau|pateikiu galutinę versiją|mano galutinė versija|ačiū visiems|štai mano galutinė šio teksto versija).*\s*:/si, '')
-            .replace(/(gabija|vytautas|eglė|jonas|tauris|perduodu|tikiuosi|linkiu|su pagarba|šefas|redaktorė|tyrėja|rašytojas|kritikas)[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
-            .replace(/as the (writer|researcher|critic|editor|boss).*?:/gi, '')
-            .replace(/i've (drafted|enhanced|evaluated|refined|reviewed).*?:/gi, '')
-            .replace(/\[CONTENT_START\]/gi, '')
-            .replace(/\[CONTENT_END\]/gi, '')
-            .trim();
-    }
+   function cleanUpFinalResult(text) {
+    if (!text) return '';
+    let cleanedText = text;
+
+    // Remove specific role introductions/conclusions (Lithuanian and English) more reliably.
+    const prefixes = [
+      /štai ką parašiau.*:/si,
+      /štai mano tekstas.*:/si,
+      /peržiūrėjau tekstą.*:/si,
+      /štai pataisytas tekstas.*:/si,
+      /atsižvelgdama į.*pataisiau.*:/si,
+      /pateikiu galutinę versiją.*:/si,
+      /mano galutinė versija.*:/si,
+       /ačiū visiems.*:/si,
+      /štai mano galutinė šio teksto versija.*:/si,
+      /as the (writer|researcher|critic|editor|boss).*?:/gi,
+      /i've (drafted|enhanced|evaluated|refined|reviewed).*?:/gi,
+      /here's (my|the) (draft|revised version|critique|edited text).*?:/gi, //Common English phrases
+    ];
+
+    prefixes.forEach(prefix => {
+      cleanedText = cleanedText.replace(prefix, '');
+    });
+
+
+     const suffixes = [
+        /(gabija|vytautas|eglė|jonas|tauris)(?:\s*[,\.:;]\s*|\s*\([A-Za-z]+\)\s*|\s*)[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, //Any LT name + punctuation
+        /perduodu.*$/si,
+        /tikiuosi.*$/si,
+        /linkiu.*$/si,
+        /lauksiu.*$/si,
+        /sėkmės.*$/si,
+        /pagarbiai.*$/si,
+        /aciu.*$/si,
+        /dėkoju.*$/si,
+        /baigdamas.*$/si,
+        /apibendrinant.*$/si,
+        /išvada.*$/si, // common conclusion words
+        /thank you.*$/si, // Common english
+        /in conclusion.*$/si, // Common english
+
+    ];
+    suffixes.forEach(suffix => {
+        cleanedText = cleanedText.replace(suffix, '');
+    });
+
+    // Generic cleanup
+    cleanedText = cleanedText.replace(/\[CONTENT_START\]/gi, '');
+    cleanedText = cleanedText.replace(/\[CONTENT_END\]/gi, '');
+    cleanedText = cleanedText.replace(/^\s+|\s+$/g, ''); // Trim leading/trailing whitespace, including newlines
+    return cleanedText.trim();
+}
 
     function displayFinalResult(resultText) {
         finalResult.textContent = cleanUpFinalResult(resultText);
@@ -783,7 +844,7 @@ IMPORTANT INSTRUCTIONS:
             if (window.ErrorAnimations) ErrorAnimations.showWorkingAnimation('boss');
 
             let historyText = (ApiConnector && typeof ApiConnector.formatConversationForApi === 'function') ?
-                ApiConnector.formatConversationForApi(conversationHistory, 12) : formatCollaborationHistory();
+                ApiConnector.formatConversationForApi(conversationHistory, 12) : formatCollaborationHistory(); //Increased context
             const initialTopic = conversationHistory.find(msg => msg.role === 'System')?.content || "Unknown topic";
 
             // *** VERY IMPORTANT - MODIFIED BOSS PROMPT ***
@@ -792,15 +853,15 @@ IMPORTANT INSTRUCTIONS:
 Dabar Tu esi Tauris, įmonės direktorius, ir TAVO žodis yra GALUTINIS.
 
 SVARBU (VISKAS YRA SVARBU):
-- Tavo užduotis – sukurti *TOBULĄ* galutinę teksto versiją.  Ne "gerą", o *TOBULĄ*.
-- **NEPRALEISK NĖ VIENOS KLAIDOS.**  Patikrink VISKĄ: gramatiką, stilių, logiką, faktus, šaltinius – VISKĄ.
+- Tavo užduotis – sukurti *TOBULĄ* galutinę teksto versiją.  Ne "gerą", o *TOBULĄ*. Ši versija turi būti *ILGA, IŠSAMI ir AKADEMIŠKAI NEPRIEKAIŠTINGA*.
+- **NEPRALEISK NĖ VIENOS KLAIDOS.**  Patikrink VISKĄ: gramatiką, stilių, logiką, faktus, šaltinius – VISKĄ.  Jeigu reikia, atlik papildomus tyrimus.
 - **Būk NEPAPRASTAI REIKLUS.**  Jei kas nors *bent truputį* negerai – KEISK.
-- **INTEGRUOK** visų ankstesnių darbuotojų (Jono, Gabijos, Vytauto, Eglės) darbą.  Paimk GERIAUSIUS dalykus iš kiekvieno.  Atmesti blogus.
+- **INTEGRUOK** visų ankstesnių darbuotojų (Jono, Gabijos, Vytauto, Eglės) darbą.  Paimk GERIAUSIUS dalykus iš kiekvieno.  Atmesti blogus ar pasenusius teiginius.  *Tavo tikslas - ne šiaip perrašyti, o SUVESTI VISKĄ į VIENĄ AUKŠČIAUSIOS KOKYBĖS TEKSTĄ*.
 - Jeigu reikia, *PERRAŠYK* dalis teksto ar net VISĄ tekstą.
-- Tekstas TURI atitikti pradinę užduotį (straipsnis, blogo įrašas, ir t.t.).
-- Tekstas TURI būti parašytas TOBULAI taisyklinga lietuvių kalba.
-- Pradėk nuo: "Ačiū visiems už darbą. Štai MANO GALUTINĖ ir NEPRIEKAIŠTINGA šio teksto versija:"
-- Pabaigoje, jei reikia, gali trumpai pakomentuoti savo sprendimus, pvz. "Pašalinau X, nes...".
+- Tekstas TURI atitikti pradinę užduotį (šiuo atveju, bakalauro darbo įvadas).
+- Tekstas TURI būti parašytas TOBULAI taisyklinga lietuvių kalba, *akademiniu stiliumi*.
+- Pradėk nuo: "Ačiū visiems už darbą. Štai MANO GALUTINĖ ir NEPRIEKAIŠTINGA šio darbo įvado versija:"
+- Pabaigoje, jei reikia, gali trumpai pakomentuoti savo sprendimus, pvz., "Pašalinau X, nes..., pridėjau Y remdamasis Z šaltiniu.".
 
 TEMA: "${initialTopic}"`;
 
