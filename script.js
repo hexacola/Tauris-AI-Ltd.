@@ -217,13 +217,12 @@ DABAR: Peržiūrėk VISĄ susirašinėjimo istoriją ir pateik galutinę tekstų
     // Track failed models to avoid retrying them
     let failedModels = {};
 
-    // Available backup models in order of preference
+    // Available backup models in order of preference (updated to remove deepseek)
     const backupModels = [
         'openai-large',
         'openai-reasoning',
-        'deepseek',
-        'deepseek-reasoner',
         'gemini',
+        'gemini-thinking',
         'claude-hybridspace',
         'searchgpt'
     ];
@@ -301,12 +300,13 @@ DABAR: Peržiūrėk VISĄ susirašinėjimo istoriją ir pateik galutinę tekstų
             });
 
             // Set appropriate defaults based on available models
+            // Updated defaults according to requirements
             const defaults = {
-                'writerModel': ['openai-large', 'gemini', 'deepseek'],
-                'researcherModel': ['searchgpt', 'deepseek-reasoner', 'openai-reasoning'],
-                'criticModel': ['deepseek-r1', 'gemini-thinking', 'openai-reasoning'],
-                'editorModel': ['claude-hybridspace', 'deepseek', 'openai-large'],
-                'bossModel': ['openai-large', 'gemini-thinking', 'deepseek-reasoner']
+                'writerModel': ['openai-large', 'gemini', 'claude-hybridspace'],
+                'researcherModel': ['searchgpt', 'openai-reasoning', 'openai-large'],
+                'criticModel': ['openai-reasoning', 'gemini-thinking', 'openai-large'],
+                'editorModel': ['claude-hybridspace', 'openai-large', 'openai-reasoning'],
+                'bossModel': ['openai-reasoning', 'openai-large', 'claude-hybridspace']
             };
 
             // Apply defaults
@@ -333,12 +333,13 @@ DABAR: Peržiūrėk VISĄ susirašinėjimo istoriją ir pateik galutinę tekstų
     }
 
     function setFallbackModels() {
+        // Updated fallback models according to requirements
         const fallbackModels = [
             { id: 'writerModel', value: 'openai-large', label: 'OpenAI GPT-4o' },
-            { id: 'researcherModel', value: 'deepseek', label: 'DeepSeek-V3' },
-            { id: 'criticModel', value: 'gemini', label: 'Gemini 2.0 Flash' },
+            { id: 'researcherModel', value: 'searchgpt', label: 'SearchGPT 🌐' },
+            { id: 'criticModel', value: 'openai-reasoning', label: 'OpenAI o1-mini 🧠' },
             { id: 'editorModel', value: 'claude-hybridspace', label: 'Claude Hybridspace' },
-            { id: 'bossModel', value: 'openai-large', label: 'OpenAI GPT-4o' }
+            { id: 'bossModel', value: 'openai-reasoning', label: 'OpenAI o1-mini 🧠' }
         ];
 
         fallbackModels.forEach(model => {
@@ -611,13 +612,12 @@ Tavo tekstas turėtų atitikti prašomo tipo tekstą (pvz., straipsnis, blogo į
         }
 
         // Fallback to original logic
-        // Define fallback sequence for the limited set of models
+        // Define fallback sequence for the limited set of models - removed deepseek
         const fallbackSequence = [
             'openai-large',
             'openai-reasoning',
-            'deepseek',
-            'deepseek-reasoner',
             'gemini',
+            'gemini-thinking',
             'claude-hybridspace',
             'searchgpt'
         ];

@@ -320,17 +320,14 @@ class ApiConnector {
      * Filters models to include only the specified allowed models
      */
     static filterPreferredModels(models) {
-        // Use only these specific models
+        // Use only these specific models - removed deepseek models per request
         const allowedModels = [
-            'openai-large',
-            'openai-reasoning',
-            'searchgpt',
-            'deepseek',
-            'claude-hybridspace',
-            'deepseek-r1',
-            'deepseek-reasoner',
-            'gemini',
-            'gemini-thinking'
+            'openai-large',     // GPT-4o
+            'openai-reasoning', // o1-mini
+            'searchgpt',        // SearchGPT with internet access
+            'gemini',           // Gemini 2.0 Flash
+            'gemini-thinking',  // Gemini 2.0 Flash Thinking
+            'claude-hybridspace' // Claude Hybridspace
         ];
         
         // Filter to only include allowed models
@@ -344,13 +341,10 @@ class ApiConnector {
             const modelOrder = {
                 'openai-large': 1,
                 'openai-reasoning': 2,
-                'deepseek': 3,
-                'deepseek-reasoner': 4, 
-                'deepseek-r1': 5,
-                'gemini': 6,
-                'gemini-thinking': 7,
-                'claude-hybridspace': 8,
-                'searchgpt': 9
+                'gemini': 3,
+                'gemini-thinking': 4,
+                'claude-hybridspace': 5,
+                'searchgpt': 6
             };
             
             const aOrder = modelOrder[a.name] || 99;
@@ -384,32 +378,6 @@ class ApiConnector {
                 baseModel: true,
                 reasoning: true
             },
-            // DeepSeek models
-            {
-                name: 'deepseek',
-                type: 'chat',
-                censored: true,
-                description: 'DeepSeek-V3',
-                baseModel: true
-            },
-            {
-                name: 'deepseek-r1',
-                type: 'chat',
-                censored: true,
-                description: 'DeepSeek-R1 Distill Qwen 32B',
-                baseModel: true,
-                reasoning: true,
-                provider: 'cloudflare'
-            },
-            {
-                name: 'deepseek-reasoner',
-                type: 'chat',
-                censored: true,
-                description: 'DeepSeek R1 - Full',
-                baseModel: true,
-                reasoning: true,
-                provider: 'deepseek'
-            },
             // Gemini models
             {
                 name: 'gemini',
@@ -441,7 +409,8 @@ class ApiConnector {
                 type: 'chat',
                 censored: true,
                 description: 'SearchGPT with realtime news and web search',
-                baseModel: false
+                baseModel: false,
+                internet: true
             }
         ];
     }

@@ -92,10 +92,9 @@ class ModelAvailability {
      * @returns {string|null} - Alternative model or null
      */
     findAlternative(originalModel) {
-        // Map of model families for our allowed models only
+        // Map of model families for our allowed models only (removed deepseek)
         const modelFamilies = {
             'openai': ['openai-large', 'openai-reasoning'],
-            'deepseek': ['deepseek', 'deepseek-r1', 'deepseek-reasoner'],
             'gemini': ['gemini', 'gemini-thinking'],
             'claude': ['claude-hybridspace'],
             'search': ['searchgpt']
@@ -122,7 +121,7 @@ class ModelAvailability {
         }
         
         // If all models in this family failed, try other families in order
-        const orderedFamilies = ['openai', 'deepseek', 'gemini', 'claude', 'search'];
+        const orderedFamilies = ['openai', 'gemini', 'claude', 'search'];
         for (const alterFamily of orderedFamilies) {
             if (alterFamily === family) continue; // Skip original family
             
