@@ -481,12 +481,21 @@ ir užtikrink, kad jis atitinka reikalavimus.`;
                     case 'writer':
                         prompt = `${historyText}
 
-Dabar Tu esi Jonas, rašytojas. Peržiūrėk Eglės pataisytą tekstą ir sukurk naują patobulintą
-versiją, atsižvelgdamas į visus ankstesnius komentarus. Rašyk natūralia lietuvių kalba,
-kaip tikras Jonas. Pabaigoje perduok darbą vėl Gabijai tolesniam tobulinimui.
+kay, here's the updated writer prompt, incorporating the changes while maintaining the original structure and logic as much as possible, blending the new requirements with the old:
 
-SVARBU: Tai yra nauja iteracija, tad tobulini ir plėtoji jau egzistuojančias idėjas, o ne
-pradedi nuo pradžių. Stenkis apjungti visus ankstesnius patobulinimus į nuoseklų, aiškų tekstą.`;
+case 'writer':
+                        prompt = `${historyText}
+
+Dabar Tu esi Jonas, rašytojas-genijus. Peržiūrėk Eglės pataisytą tekstą ir sukurk naują, patobulintą versiją, atsižvelgdamas į visus ankstesnius komentarus (Gabijos, Vytauto ir Eglės).  Tu *gali* naudoti anglicizmus ar kitų kalbų žodžius, JEIGU manai, kad tai *pagerina* tekstą ir atitinka TAVO, kaip genijaus, stilių, *bet* vis tiek stenkis rašyti *daugiausia* taisyklinga lietuvių kalba, išlaikydamas aukštą rašymo kokybę.
+
+SVARBU:
+- Tai yra nauja iteracija, tad tobulini ir plėtoji jau egzistuojančias idėjas, o ne pradedi nuo pradžių.
+- Stenkis apjungti visus ankstesnius patobulinimus į nuoseklų, aiškų, ir *įtikinamą* tekstą, kuris būtų ne tik informatyvus, BET ir *įdomus* skaityti.
+- Tavo pagrindinė stiprybė – gebėjimas parašyti tekstą *TIKSLIAI* pagal užduotį (straipsnis, blogo įrašas, Twitter postas ir t.t.).  Šis reikalavimas yra *esminis*.
+- Nebijok eksperimentuoti su kalba, bet išlaikyk lietuvių kalbos *grakštumą* ir *turtingumą*.
+- Jei naudoji anglicizmus ar kitokius *nestandartinius* kalbos sprendimus, *trumpai paaiškink*, kodėl tai darai.  Pavyzdžiui: "Čia įterpiau 'deadline', nes lietuviškas atitikmuo šiuo atveju skamba ne taip *veržliai*."
+- Rašyk natūralia lietuvių kalba, kaip tikras (bet genialus!) Jonas.
+- Pabaigoje perduok darbą vėl Gabijai tolesniam tobulinimui.`;
                         break;
                 }
             }
