@@ -21,7 +21,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (indicator) indicator.classList.toggle('active', active);
                 const statusText = document.getElementById('modelStatusText');
                 if (statusText) statusText.textContent = message || '';
-            }
+            },
+            //Crucial for prompt trimming
+            trimConversationHistory: (historyText) => {
+                const maxLength = 12000; // Maximum length
+                if (historyText.length > maxLength) {
+                   const trimStart = historyText.length - (maxLength-100)
+                   historyText = "[...]"+ historyText.substring(trimStart);
+                }
+                return historyText;
+            },
+            //Crucial for prompt formatting
+            formatConversationForApi: (conversationHistory, numMessages = 4) => {
+                let formattedHistory = "";
+                const relevantMessages = conversationHistory.slice(-numMessages);
+                relevantMessages.forEach(msg => {
+                formattedHistory += `${msg.role}: ${msg.content}\n`;
+                 });
+            return formattedHistory;
+            },
         };
     }
 
@@ -619,30 +637,38 @@ IMPORTANT INSTRUCTIONS:
         });
         return ApiConnector.trimConversationHistory(historyText);
     }
-
-    // *** MODIFIED extractFinalResult ***
+    // *** CORRECTED extractFinalResult (Restores Original Fallback Logic) ***
     function extractFinalResult() {
-        // Get ALL contributions from ALL roles, except 'System'.
-        const allContributions = conversationHistory.filter(msg => msg.role !== 'System' && msg.content);
+        const contributions = conversationHistory.filter(msg =>
+            msg.role !== 'System' && msg.content && msg.content.length > 100
+        );
 
-                // If the Boss has contributed, use *only* the Boss's *last* contribution.
-        const bossContributions = allContributions.filter(msg => msg.role === 'Boss');
+        // Prioritize Boss's LAST contribution, if available.
+        const bossContributions = contributions.filter(msg => msg.role === 'Boss');
         if (bossContributions.length > 0) {
             return cleanUpFinalResult(bossContributions[bossContributions.length - 1].content);
         }
 
-        // If the Boss hasn't contributed (e.g., error), fall back to Editor, then Writer.
-        const editorContributions = allContributions.filter(msg => msg.role === 'Editor');
-        if (editorContributions.length > 0) {
-            return cleanUpFinalResult(editorContributions[editorContributions.length - 1].content);
+        // Fallback to Editor's LAST contribution, if available.
+        const lastEditorMsg = contributions
+            .filter(msg => msg.role === 'Editor')
+            .slice(-1)[0];
+
+        if (lastEditorMsg) {
+            return cleanUpFinalResult(lastEditorMsg.content);
         }
 
-        const writerContributions = allContributions.filter(msg => msg.role === 'Writer');
-        if (writerContributions.length > 0) {
-            return cleanUpFinalResult(writerContributions[writerContributions.length - 1].content);
+        // Fallback to Writer's LAST contribution, if available.
+        const lastWriterMsg = contributions
+            .filter(msg => msg.role === 'Writer')
+            .slice(-1)[0];
+
+        if (lastWriterMsg) {
+            return cleanUpFinalResult(lastWriterMsg.content);
         }
 
-        return cleanUpFinalResult(conversationHistory[conversationHistory.length - 1]?.content || ""); // Fallback to last message
+        // Ultimate fallback: use the very last message (even if short), or an empty string.
+        return cleanUpFinalResult(conversationHistory[conversationHistory.length - 1]?.content || "");
     }
 
 
@@ -804,7 +830,7 @@ TEMA: "${initialTopic}"`;
     }
 
     function completeFinalizeCollaboration() {
-        const finalResultText = extractFinalResult(); // Now correctly extracts ONLY Boss's text.
+        const finalResultText = extractFinalResult(); // Now correctly extracts based on priority.
         displayFinalResult(finalResultText);
         if (copyResultBtn) copyResultBtn.disabled = false;
         if (downloadResultBtn) downloadResultBtn.disabled = false;
@@ -867,7 +893,7 @@ TEMA: "${initialTopic}"`;
         });
     });
 
-    window.updateProgress = updateProgress;
+    window.updateProgress = updateProgress;  // These might not be strictly needed anymore
     window.setResultStatus = setResultStatus;
     window.addMessageToChatLog = addMessageToChatLog;
     window.updateStatus = updateStatus;
