@@ -9,12 +9,33 @@ class StampEffects {
         const resultContainer = document.querySelector('.final-result');
         if (!resultContainer) return;
         
-        // Create boss approval stamp if it doesn't exist
-        let bossStamp = resultContainer.querySelector('.boss-approval-stamp');
-        if (!bossStamp) {
-            bossStamp = document.createElement('div');
-            bossStamp.className = 'boss-approval-stamp';
-            bossStamp.textContent = 'ŠEFO PATVIRTINTA';
+        // Remove any existing boss approval stamps (to avoid duplication)
+        const existingStamp = resultContainer.querySelector('.boss-approval-stamp');
+        if (existingStamp) {
+            existingStamp.remove();
+        }
+        
+        // Remove any existing signature (to avoid duplication)
+        const existingSignature = document.getElementById('finalResult').querySelector('.boss-signature');
+        if (existingSignature) {
+            existingSignature.remove();
+        }
+        
+        // Create boss approval stamp and place it at the end of the document
+        const bossStamp = document.createElement('div');
+        bossStamp.className = 'boss-approval-stamp';
+        bossStamp.textContent = 'ŠEFO PATVIRTINTA';
+        
+        // Add stamp to the end of finalResult, not the container
+        const finalResult = document.getElementById('finalResult');
+        if (finalResult) {
+            // Make sure we append it to the end of the content
+            finalResult.appendChild(bossStamp);
+            
+            // Add padding at the bottom of the content to make room for stamp
+            finalResult.style.paddingBottom = '80px';
+        } else {
+            // Fallback to the container if finalResult doesn't exist
             resultContainer.appendChild(bossStamp);
         }
         
@@ -29,6 +50,50 @@ class StampEffects {
         
         // Play stamp sound
         this.playStampSound();
+        
+        // Add approved stamp style if not already present
+        if (!document.getElementById('boss-stamp-styles')) {
+            const style = document.createElement('style');
+            style.id = 'boss-stamp-styles';
+            style.textContent = `
+                .boss-approval-stamp {
+                    position: relative;
+                    display: block;
+                    margin-top: 30px;
+                    margin-left: auto;
+                    padding: 15px;
+                    width: 200px;
+                    text-align: center;
+                    color: #ff3333;
+                    font-weight: bold;
+                    font-size: 24px;
+                    letter-spacing: 1px;
+                    font-family: 'Arial Black', sans-serif;
+                    border: 5px solid #ff3333;
+                    border-radius: 10px;
+                    transform: rotate(0deg);
+                    opacity: 0;
+                }
+                
+                .boss-approval-animation {
+                    animation: stamp-appear 0.5s ease-out forwards;
+                }
+                
+                @keyframes stamp-appear {
+                    0% { transform: rotate(-30deg) scale(0.5); opacity: 0; }
+                    50% { transform: rotate(10deg) scale(1.2); opacity: 0.6; }
+                    75% { transform: rotate(-5deg) scale(1.1); opacity: 0.8; }
+                    100% { transform: rotate(0deg) scale(1); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Remove the rubber stamp from header to avoid duplication
+        const headerStamp = document.querySelector('.rubber-stamp');
+        if (headerStamp) {
+            headerStamp.style.display = 'none';
+        }
     }
     
     /**

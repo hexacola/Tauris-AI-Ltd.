@@ -92,42 +92,41 @@ class ModelAvailability {
      * @returns {string|null} - Alternative model or null
      */
     findAlternative(originalModel) {
-        // Map of model families
+        // Map of model families for our allowed models only
         const modelFamilies = {
-            'deepseek': ['deepseek-coder', 'deepseek-r1', 'deepseek-reasoner'],
-            'gemini': ['gemini-thinking'],
-            'openai': ['openai-large', 'openai-reasoning'], 
-            'llama': ['llamalight'],
-            'mistral': ['mistral-nemo'],
+            'openai': ['openai-large', 'openai-reasoning'],
+            'deepseek': ['deepseek', 'deepseek-r1', 'deepseek-reasoner'],
+            'gemini': ['gemini', 'gemini-thinking'],
+            'claude': ['claude-hybridspace'],
+            'search': ['searchgpt']
         };
         
         // Find the family of the original model
         let family = null;
         Object.entries(modelFamilies).forEach(([familyName, models]) => {
-            if (originalModel === familyName || originalModel.startsWith(familyName + '-') || 
-                models.includes(originalModel)) {
+            if (models.includes(originalModel)) {
                 family = familyName;
             }
         });
         
         if (!family) return null;
         
-        // Get all models from this family (including the base model)
-        const familyModels = [family, ...(modelFamilies[family] || [])];
+        // Get all models from this family (except the original)
+        const familyModels = modelFamilies[family].filter(m => m !== originalModel);
         
-        // Find first available alternative
+        // Find first available alternative within the same family
         for (const alternative of familyModels) {
-            if (alternative !== originalModel && this.isAvailable(alternative)) {
+            if (this.isAvailable(alternative)) {
                 return alternative;
             }
         }
         
-        // If all models in this family failed, try other families
-        const orderedFamilies = ['openai', 'mistral', 'llama', 'gemini'];
+        // If all models in this family failed, try other families in order
+        const orderedFamilies = ['openai', 'deepseek', 'gemini', 'claude', 'search'];
         for (const alterFamily of orderedFamilies) {
             if (alterFamily === family) continue; // Skip original family
             
-            const altModels = [alterFamily, ...(modelFamilies[alterFamily] || [])];
+            const altModels = modelFamilies[alterFamily] || [];
             for (const alternative of altModels) {
                 if (this.isAvailable(alternative)) {
                     return alternative;

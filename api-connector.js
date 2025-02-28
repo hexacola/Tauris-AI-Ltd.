@@ -317,55 +317,46 @@ class ApiConnector {
     }
     
     /**
-     * Filters models to include only preferred families
+     * Filters models to include only the specified allowed models
      */
     static filterPreferredModels(models) {
-        const preferredFamilies = ['openai', 'gemini', 'deepseek', 'llama', 'searchgpt'];
+        // Use only these specific models
+        const allowedModels = [
+            'openai-large',
+            'openai-reasoning',
+            'searchgpt',
+            'deepseek',
+            'claude-hybridspace',
+            'deepseek-r1',
+            'deepseek-reasoner',
+            'gemini',
+            'gemini-thinking'
+        ];
         
-        // Filter to only include specified families
-        const filtered = models.filter(model => {
-            // Check if model belongs to any preferred family
-            return preferredFamilies.some(family => 
-                model.name === family || model.name.startsWith(family + '-')
-            );
-        });
+        // Filter to only include allowed models
+        const filtered = models.filter(model => 
+            allowedModels.includes(model.name)
+        );
         
-        // Sort by family priority and capabilities
+        // Sort by priority
         filtered.sort((a, b) => {
             // Priority order
-            const familyOrder = {
-                'openai': 1,
-                'gemini': 2,
-                'deepseek': 3, 
-                'llama': 4,
-                'searchgpt': 5
+            const modelOrder = {
+                'openai-large': 1,
+                'openai-reasoning': 2,
+                'deepseek': 3,
+                'deepseek-reasoner': 4, 
+                'deepseek-r1': 5,
+                'gemini': 6,
+                'gemini-thinking': 7,
+                'claude-hybridspace': 8,
+                'searchgpt': 9
             };
             
-            // Get base family name
-            const getFamily = name => {
-                for (const family of preferredFamilies) {
-                    if (name === family || name.startsWith(family + '-')) {
-                        return family;
-                    }
-                }
-                return name;
-            };
+            const aOrder = modelOrder[a.name] || 99;
+            const bOrder = modelOrder[b.name] || 99;
             
-            const aFamily = getFamily(a.name);
-            const bFamily = getFamily(b.name);
-            
-            // Compare by family order
-            const aOrder = familyOrder[aFamily] || 99;
-            const bOrder = familyOrder[bFamily] || 99;
-            
-            if (aOrder !== bOrder) return aOrder - bOrder;
-            
-            // Then by special capabilities
-            if ((a.vision || a.reasoning) && !(b.vision || b.reasoning)) return -1;
-            if (!(a.vision || a.reasoning) && (b.vision || b.reasoning)) return 1;
-            
-            // Then by name for consistent ordering
-            return a.name.localeCompare(b.name);
+            return aOrder - bOrder;
         });
         
         return filtered;
@@ -377,20 +368,81 @@ class ApiConnector {
     static getFallbackModels() {
         return [
             // OpenAI models
-            { name: 'openai', type: 'chat', description: 'OpenAI GPT-4o-mini', baseModel: true, vision: true },
-            { name: 'openai-large', type: 'chat', description: 'OpenAI GPT-4o', baseModel: true, vision: true },
-            
-            // Gemini models
-            { name: 'gemini', type: 'chat', description: 'Gemini 2.0 Flash', baseModel: true },
-            
+            { 
+                name: 'openai-large',
+                type: 'chat',
+                censored: true,
+                description: 'OpenAI GPT-4o',
+                baseModel: true,
+                vision: true
+            },
+            { 
+                name: 'openai-reasoning',
+                type: 'chat',
+                censored: true,
+                description: 'OpenAI o1-mini',
+                baseModel: true,
+                reasoning: true
+            },
             // DeepSeek models
-            { name: 'deepseek', type: 'chat', description: 'DeepSeek-V3', baseModel: true },
-            
-            // Llama models
-            { name: 'llama', type: 'chat', description: 'Llama 3.3 70B', baseModel: true },
-            
+            {
+                name: 'deepseek',
+                type: 'chat',
+                censored: true,
+                description: 'DeepSeek-V3',
+                baseModel: true
+            },
+            {
+                name: 'deepseek-r1',
+                type: 'chat',
+                censored: true,
+                description: 'DeepSeek-R1 Distill Qwen 32B',
+                baseModel: true,
+                reasoning: true,
+                provider: 'cloudflare'
+            },
+            {
+                name: 'deepseek-reasoner',
+                type: 'chat',
+                censored: true,
+                description: 'DeepSeek R1 - Full',
+                baseModel: true,
+                reasoning: true,
+                provider: 'deepseek'
+            },
+            // Gemini models
+            {
+                name: 'gemini',
+                type: 'chat',
+                censored: true,
+                description: 'Gemini 2.0 Flash',
+                baseModel: true,
+                provider: 'google'
+            },
+            {
+                name: 'gemini-thinking',
+                type: 'chat',
+                censored: true,
+                description: 'Gemini 2.0 Flash Thinking',
+                baseModel: true,
+                provider: 'google'
+            },
+            // Claude model
+            {
+                name: 'claude-hybridspace',
+                type: 'chat',
+                censored: true,
+                description: 'Claude Hybridspace',
+                baseModel: true
+            },
             // SearchGPT
-            { name: 'searchgpt', type: 'chat', description: 'SearchGPT', baseModel: false }
+            {
+                name: 'searchgpt',
+                type: 'chat',
+                censored: true,
+                description: 'SearchGPT with realtime news and web search',
+                baseModel: false
+            }
         ];
     }
     

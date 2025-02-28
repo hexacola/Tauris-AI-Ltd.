@@ -1,0 +1,137 @@
+/* Additional styles for enhanced worker capabilities */
+.role-card p {
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 15px;
+    color: var(--text);
+}
+
+/* Worker personality indicators */
+.role-card:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    z-index: 5;
+    opacity: 0.8;
+}
+
+.role-card.writer:before {
+    content: "📝";
+    background: rgba(236, 113, 6, 0.2);
+}
+
+.role-card.researcher:before {
+    content: "🔍";
+    background: rgba(0, 153, 48, 0.2);
+}
+
+.role-card.critic:before {
+    content: "⚖️";
+    background: rgba(193, 39, 45, 0.2);
+}
+
+.role-card.editor:before {
+    content: "✏️";
+    background: rgba(255, 218, 0, 0.2);
+}
+
+.role-card.boss:before {
+    content: "👔";
+    background: rgba(0, 120, 212, 0.2);
+}
+
+/* Worker mood styling */
+.worker-mood {
+    font-size: 12px;
+    font-style: italic;
+    margin-top: 5px;
+    color: var(--text-light);
+}
+
+/* Boss approval stamp styling */
+.boss-approval-stamp {
+    position: relative;
+    display: block;
+    margin-top: 30px;
+    margin-left: auto;
+    padding: 15px;
+    width: 200px;
+    text-align: center;
+    color: #ff3333;
+    font-weight: bold;
+    font-size: 24px;
+    letter-spacing: 1px;
+    font-family: 'Arial Black', sans-serif;
+    border: 5px solid #ff3333;
+    border-radius: 10px;
+    transform: rotate(0deg);
+    opacity: 1;
+}
+
+/* Enhanced result content padding */
+.result-content {
+    padding-bottom: 60px;
+    position: relative;
+}
+
+/* Lithuanian themed elements */
+.lithuanian-pride {
+    color: var(--lt-green);
+    font-weight: bold;
+}
+
+.heart {
+    color: var(--lt-red);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* Office worker animations */
+.role-card {
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.role-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.role-card.thinking-hard {
+    animation: thinking-glow 1.5s infinite alternate;
+}
+
+@keyframes thinking-glow {
+    from { box-shadow: 0 0 5px rgba(66, 133, 244, 0.5); }
+    to { box-shadow: 0 0 20px rgba(66, 133, 244, 0.8); }
+}
+
+/* Message styling for different workers */
+.message.writer {
+    border-left: 4px solid var(--writer-color);
+}
+
+.message.researcher {
+    border-left: 4px solid var(--researcher-color);
+}
+
+.message.critic {
+    border-left: 4px solid var(--critic-color);
+}
+
+.message.editor {
+    border-left: 4px solid var(--editor-color);
+}
+
+.message.boss {
+    border-left: 4px solid var(--boss-color);
+}
