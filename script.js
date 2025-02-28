@@ -471,55 +471,12 @@ Tavo tekstas turėtų atitikti prašomo tipo tekstą (pvz., straipsnis, blogo į
                     historyText = ApiConnector.formatConversationForApi(conversationHistory);
                     historyText = ApiConnector.trimConversationHistory(historyText);
                 } else {
-                    // Fallback to original method
+                    // Use our improved formatting function
                     historyText = formatCollaborationHistory();
                 }
 
-                // Customize the prompt based on which worker is responding
-                switch (workerKey) {
-                    case 'researcher':
-                        prompt = `${historyText}
-
-Dabar Tu esi Gabija, tyrėja. Peržiūrėk Jono parašytą tekstą ir papildyk jį moksliniais faktais,
-statistika ir akademinėmis nuorodomis. **Jei reikia, atlik papildomus tyrimus internete.** Rašyk natūralia lietuvių kalba, kaip tikra Gabija.
-Išlaikyk pagrindinę teksto struktūrą, bet pridėk vertingos informacijos ir citatų.
-Pabaigoje perduok darbą Vytautui vertinti.
-
-SVARBU: Reaguok į ankstesnį tekstą, išlaikydama kontekstą ir tęsdama mintį. Naudok tikrus akademinius
-šaltinius ir statistiką, kuri pagrįstų teiginius. **Pateik nuorodas į šaltinius, jei įmanoma.**`;
-                        break;
-                    case 'critic':
-                        prompt = `${historyText}
-
-Dabar Tu esi Vytautas, kritikas. Įvertink Gabijos patobulintą tekstą, nurodyk trūkumus
-ir pasiūlyk, ką būtų galima tobulinti. Būk konstruktyviai kritiškas ir rašyk natūralia
-lietuvių kalba, kaip tikras Vytautas. Pabaigoje perduok darbą Eglei galutiniam redagavimui.
-
-SVARBU: Analizuok teksto logiką, struktūrą, argumentus ir šaltinių naudojimą. Pasiūlyk
-konkrečius patobulinimus, kuriuos Eglė galėtų įgyvendinti.`;
-                        break;
-                    case 'editor':
-                        prompt = `${historyText}
-
-Dabar Tu esi Eglė, redaktorė. Atsižvelgdama į Vytauto kritiką, pataisyk ir patobulink
-tekstą. Pateik galutinę, išbaigtą versiją lietuvių kalba. Šis tekstas bus naudojamas
-kaip galutinis rezultatas, todėl įsitikink, kad jis yra aiškus, rišlus ir profesionalus.
-${currentIteration + 1 === maxIterations ? "Tai bus priešpaskutinė versija prieš šefo peržiūrą, todėl padaryk ją kuo tobulesnę." : ""}
-
-SVARBU: Išlaikyk originalias idėjas ir temas, bet ištaisyk gramatines klaidas, pagerink tekstą stilistiškai,
-ir užtikrink, kad jis atitinka reikalavimus.`;
-                        break;
-                    case 'writer':
-                        prompt = `${historyText}
-
-Dabar Tu esi Jonas, rašytojas. Peržiūrėk Eglės pataisytą tekstą ir sukurk naują patobulintą
-versiją, atsižvelgdamas į visus ankstesnius komentarus. Rašyk natūralia lietuvių kalba,
-kaip tikras Jonas. Pabaigoje perduok darbą vėl Gabijai tolesniam tobulinimui.
-
-SVARBU: Tai yra nauja iteracija, tad tobulini ir plėtoji jau egzistuojančias idėjas, o ne
-pradedi nuo pradžių. Stenkis apjungti visus ankstesnius patobulinimus į nuoseklų, aiškų tekstą.`;
-                        break;
-                }
+                // Use the new function to create worker-specific prompts
+                prompt = createWorkerPrompt(historyText, workerKey);
             }
 
             // Try to get a response with automatic model fallback
@@ -967,27 +924,148 @@ IMPORTANT INSTRUCTIONS:
             historyText += `Topic: ${topicMessage.content}\n\n`;
         }
 
-        // Get the last few exchanges (not too many to avoid overloading context)
-        const maxExchanges = 4; // Only get the last 2 complete exchanges (4 messages)
+        // Determine if we're formatting for the boss or regular worker
+        const workerKey = getCurrentWorkerKey();
+        const isBoss = workerKey === 'boss' || finalWorker === workerKey;
+        
+        // Boss gets more context (8-12 messages), workers get last 4 messages
+        const maxMessages = isBoss ? 12 : 4;
+        
+        // Get relevant history based on role
         const relevantHistory = conversationHistory
             .filter(msg => msg.role !== 'System')
-            .slice(-maxExchanges);
+            .slice(-maxMessages);
 
         // Add a note if we're truncating history
-        if (conversationHistory.length > maxExchanges + 1) { // +1 for the System message
-            historyText += "[Earlier conversation omitted for brevity]\n\n";
+        if (conversationHistory.length > maxMessages + 1) { // +1 for the System message
+            historyText += `[${isBoss ? "Showing the most recent and important" : "Earlier conversation omitted for brevity, showing last"} ${maxMessages} messages]\n\n`;
         }
 
+        // Format each message in the history
         relevantHistory.forEach((msg, index) => {
-            historyText += `${msg.role}: ${msg.content}\n\n`;
+            // For boss, add timestamps to help understand conversation flow
+            const timestamp = isBoss ? `[${new Date().toLocaleTimeString()}] ` : "";
+            historyText += `${timestamp}${msg.role}: ${msg.content}\n\n`;
 
             if (index < relevantHistory.length - 1) {
                 historyText += "---\n\n";
             }
         });
 
-        // Apply additional trimming if needed
-        return ApiConnector.trimConversationHistory(historyText);
+        // For boss, add a summary of key contributions
+        if (isBoss) {
+            historyText += "\nKEY CONTRIBUTIONS SUMMARY:\n";
+            
+            // Find the most recent contribution from each worker
+            const workers = ['Writer', 'Researcher', 'Critic', 'Editor'];
+            workers.forEach(role => {
+                const lastMsg = conversationHistory
+                    .filter(msg => msg.role === role)
+                    .slice(-1)[0];
+                
+                if (lastMsg) {
+                    // Extract a brief summary (first 100-150 characters)
+                    const summary = lastMsg.content.length > 150 
+                        ? lastMsg.content.substring(0, 150) + "..."
+                        : lastMsg.content;
+                        
+                    historyText += `\n${role}: ${summary}\n`;
+                }
+            });
+            
+            historyText += "\nAs the Boss, your job is to review ALL contributions and create a final, coherent version.\n";
+        }
+
+        return historyText;
+    }
+
+    // Customize the prompt based on which worker is responding
+    function createWorkerPrompt(historyText, workerKey) {
+        let lastMessages = {};
+        
+        // Find the last message from each worker to reference
+        ['Writer', 'Researcher', 'Critic', 'Editor', 'Boss'].forEach(role => {
+            const lastMsg = conversationHistory
+                .filter(msg => msg.role === role)
+                .slice(-1)[0];
+                
+            if (lastMsg) {
+                lastMessages[role] = lastMsg.content;
+            }
+        });
+
+        switch (workerKey) {
+            case 'researcher':
+                return `${historyText}
+
+Dabar Tu esi Gabija, tyrėja. Peržiūrėk visus ankstesnius komentarus, ypač Jono (${lastMessages['Writer'] ? 'kuris rašė: "' + lastMessages['Writer'].substring(0, 100) + '..."' : 'paskutinį komentarą'}).
+
+Tavo užduotis:
+1. Papildyk tekstą moksliniais faktais ir akademinėmis nuorodomis
+2. Atlik papildomus tyrimus internete, jei reikia
+3. Pateik tikslias nuorodas į šaltinius su URL adresais
+4. Išlaikyk pagrindinę teksto struktūrą, bet pridėk vertingos informacijos
+
+SVARBU: Reaguok į ankstesnį tekstą, išlaikydama kontekstą ir tęsdama mintį. Tavo tekstas turi būti sklandus tęsinys ankstesnių dalyvių darbų.`;
+
+            case 'critic':
+                return `${historyText}
+
+Dabar Tu esi Vytautas, kritikas. Peržiūrėk visus ankstesnius komentarus, ypač Gabijos (${lastMessages['Researcher'] ? 'kuris rašė: "' + lastMessages['Researcher'].substring(0, 100) + '..."' : 'paskutinį komentarą'}).
+
+Tavo užduotis:
+1. Įvertink teksto stiprybes (aiškumą, originalumą, įtaigą)
+2. Nurodyk tobulintinas vietas (struktūra, argumentacija, kalbos vartojimas)
+3. Pasiūlyk konkrečius patobulinimus
+4. Pateik bendrą įvertinimą
+
+SVARBU: Analizuok teksto logiką, struktūrą, argumentus ir šaltinių naudojimą. Tavo kritika turi būti konstruktyvi ir pagrįsta.`;
+
+            case 'editor':
+                return `${historyText}
+
+Dabar Tu esi Eglė, redaktorė. Peržiūrėk visus ankstesnius komentarus, ypač Vytauto kritiką (${lastMessages['Critic'] ? 'kuris rašė: "' + lastMessages['Critic'].substring(0, 100) + '..."' : 'paskutinį komentarą'}).
+
+Tavo užduotis:
+1. Identifikuok ir ištaisyk gramatines, skyrybos ir stilistines klaidas
+2. Patobulink teksto struktūrą ir rišlumą
+3. Užtikrink, kad tekstas yra aiškus, nuoseklus ir profesionalus
+4. Pateik galutinę, išbaigtą versiją
+
+SVARBU: Išlaikyk originalias idėjas ir temas, bet ištaisyk klaidas ir pagerinimus pagal Vytauto kritiką.`;
+
+            case 'writer':
+                return `${historyText}
+
+Dabar Tu esi Jonas, rašytojas. Peržiūrėk visus ankstesnius komentarus, ypač Eglės patobulintą tekstą (${lastMessages['Editor'] ? 'kuris rašė: "' + lastMessages['Editor'].substring(0, 100) + '..."' : 'paskutinį komentarą'}).
+
+Tavo užduotis:
+1. Sukurk naują patobulintą versiją, atsižvelgdamas į visus ankstesnius komentarus
+2. Išlaikyk ir patobulink teksto stilių bei struktūrą
+3. Užtikrink, kad tekstas yra aiškus, įdomus ir informatyvus
+4. Pabaigoje perduok darbą Gabijai tolesniam tobulinimui
+
+SVARBU: Tai yra nauja iteracija, tad tobulini ir plėtoji jau egzistuojančias idėjas, o ne pradedi nuo pradžių.`;
+
+            case 'boss':
+                return `${historyText}
+
+Dabar Tu esi Tauris, biuro šefas ir galutinis prižiūrėtojas. Peržiūrėk VISĄ susirašinėjimo istoriją (ypač perskaityk visus Jono, Gabijos, Vytauto ir Eglės komentarus).
+
+Tavo užduotis:
+1. Apjunk visų darbuotojų geriausias idėjas ir įžvalgas į vieną nuoseklų tekstą
+2. Užtikrink, kad galutinis variantas turi aiškią struktūrą: įvadą, pagrindinę dalį ir išvadas
+3. Įtrauk Gabijos pateiktus faktus ir šaltinius
+4. Atsižvelk į Vytauto kritiką ir siūlomus patobulinimus
+5. Išlaikyk Eglės kalbos ir stiliaus pataisymus
+
+SVARBU: Kaip šefas, tu turi matyti visą bendrą vaizdą ir užtikrinti, kad galutinis tekstas yra aukščiausios kokybės.
+
+Pradėk: "Ačiū visiems už įdėtą darbą! Peržiūrėjęs visą susirašinėjimo istoriją, pateikiu galutinę šio teksto versiją:"`;
+
+            default:
+                return historyText;
+        }
     }
 
     // Extract the final result from the last writer's contribution
