@@ -41,7 +41,7 @@
 
         <div class="control-panel">
             <div class="input-group">
-                <label for="initialPrompt">Jūsų užduotis:</label>
+                <label for="initialPrompt">Jūsų užsakymas:</label>
                 <textarea id="initialPrompt" rows="3" placeholder="Įveskite užduotį, pvz., „Parašykite įvadą bakalauro darbui apie dirbtinį intelektą"">Parašykite įvadą bakalauro darbui apie dirbtinį intelektą modernių technologijų kontekste</textarea>
             </div>
             
@@ -155,7 +155,7 @@
             <div class="buttons">
                 <button id="startBtn" class="lithuanian-button">Pradėti darbą</button>
                 <button id="stopBtn" class="lithuanian-button stop" disabled>Sustabdyti</button>
-                <button id="clearBtn" class="lithuanian-button clear">Pradėti naują darbą</button>
+                <button id="clearBtn" class="lithuanian-button clear">Naujas užsakymas</button>
             </div>
             
             <div class="conversation-settings">
@@ -321,6 +321,10 @@
         });
     });
     </script>
+    <!-- Load boss-phrases.js first -->
+    <script src="boss-phrases.js"></script>
+
+    <!-- Then load other scripts -->
     <script src="retry-handler.js"></script>
     <script src="model-availability.js"></script>
     <script src="api-connector.js"></script>
@@ -335,5 +339,7 @@
     <script src="approval-stamp.js"></script>
     <script src="stamp-effects.js"></script>
     <script src="document-formatter.js"></script>
+    <script src="utility.js"></script>
+    <script src="lietuviskas-thinking.js"></script>
 </body>
 </html>

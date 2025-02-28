@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Start the random boss phrases
     setTimeout(() => {
-        scheduleBossPhrases();
+        setupBossPhrases();
     }, 10000); // Start after 10 seconds
 });
 
@@ -803,7 +803,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, randomDelay);
     }
     
-    // Cepelinai animation when work completes
+    // Show cepelinai when work completes
     function showCepelinaiCelebration() {
         // Create 5 flying cepelinai
         for (let i = 0; i < 5; i++) {
@@ -890,3 +890,43 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+/**
+ * Setup boss phrases
+ */
+function setupBossPhrases() {
+    const bossElement = document.querySelector('.boss-speech');
+    
+    // Check if BossPhrases is available and use it properly
+    if (window.BossPhrases && bossElement) {
+        window.BossPhrases.scheduleBossPhrases(bossElement, 15000, false);
+    }
+}
+
+// Setup boss phrases
+function setupBossPhrases() {
+    const bossElement = document.querySelector('.boss-speech');
+    
+    // Check if BossPhrases is available and use it properly
+    if (window.BossPhrases && bossElement) {
+        window.BossPhrases.scheduleBossPhrases(bossElement, 15000, false);
+    }
+}
+
+// Remove DeepSeek models from model selects - improved version
+function removeDeepSeekModels() {
+    console.log('Removing DeepSeek models from select elements');
+    const modelSelects = document.querySelectorAll('.model-select');
+    
+    modelSelects.forEach(select => {
+        // Convert to array to avoid live collection issues during removal
+        Array.from(select.options).forEach(option => {
+            // Check if the option value or text contains "deepseek" (case insensitive)
+            if (option.value.toLowerCase().includes('deepseek') || 
+                option.textContent.toLowerCase().includes('deepseek')) {
+                console.log('Removing DeepSeek model:', option.value);
+                select.removeChild(option);
+            }
+        });
+    });
+}

@@ -86,6 +86,27 @@ class RetryHandler {
     }
     
     /**
+     * Shows the boss being impatient during retries
+     */
+    static showImpatientBoss() {
+        const bossElement = document.querySelector('.boss-container .boss-status');
+        
+        // Check if BossPhrases is available and use it
+        if (window.BossPhrases && bossElement) {
+            window.BossPhrases.scheduleBossPhrases(bossElement, 5000);
+        }
+        
+        // Add impatient animation to boss
+        const bossCard = document.querySelector('.boss-container');
+        if (bossCard) {
+            bossCard.classList.add('impatient');
+            setTimeout(() => {
+                bossCard.classList.remove('impatient');
+            }, 3000);
+        }
+    }
+    
+    /**
      * Get Lithuanian error message for common API errors
      * @param {Error} error - The original error
      * @returns {string} - Lithuanianized error message

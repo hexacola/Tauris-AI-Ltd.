@@ -239,3 +239,29 @@ window.addEventListener('DOMContentLoaded', function() {
         };
     }
 });
+
+// Fix syntax error - this function was missing proper declaration
+function showBossReactionToError() {
+    const bossElement = document.querySelector('.boss-container');
+    if (!bossElement) return;
+    
+    bossElement.classList.add('angry');
+    
+    // Get boss speech bubble
+    const bossSpeech = bossElement.querySelector('.boss-speech') || 
+                      document.createElement('div');
+    
+    // Check if BossPhrases is available and use it properly
+    if (window.BossPhrases && bossSpeech) {
+        bossSpeech.textContent = window.BossPhrases.getRandomPhrase();
+        bossSpeech.classList.add('active');
+        
+        setTimeout(() => {
+            bossSpeech.classList.remove('active');
+            bossElement.classList.remove('angry');
+        }, 3000);
+    }
+}
+
+// Make function available globally
+window.showBossReactionToError = showBossReactionToError;
