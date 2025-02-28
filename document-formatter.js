@@ -1,148 +1,144 @@
 /**
- * Handles academic document formatting
+ * Document formatter for styling final results
  */
 class DocumentFormatter {
     /**
-     * Format the final academic document
-     * @param {string} documentId - The ID of the element containing the document
+     * Format the final document with styling and structure
+     * @param {string} text - The raw text content
+     * @returns {HTMLElement} - A formatted DOM element
      */
-    static formatAcademicDocument(documentId = 'finalResult') {
-        const documentElement = document.getElementById(documentId);
-        if (!documentElement) return;
+    static formatFinalDocument(text) {
+        if (!text) return null;
         
-        // Get the text content
-        const content = documentElement.textContent;
-        if (!content) return;
+        // Create a container for the formatted content
+        const container = document.createElement('div');
+        container.className = 'formatted-document';
         
-        // Clear the current content
-        documentElement.innerHTML = '';
+        // Clean any existing HTML and split into paragraphs
+        const cleanText = this.cleanText(text);
         
-        // Identify sections based on headings
-        const sections = this.identifySections(content);
+        // Remove the ŠEFO PATVIRTINTA text from the document - we'll add it as a visual element
+        const textWithoutStamp = cleanText.replace(/ŠEFO PATVIRTINTA|PATVIRTINTA/g, '');
+        const paragraphs = textWithoutStamp.split('\n\n').filter(p => p.trim());
         
-        // Create properly formatted document
-        sections.forEach(section => {
-            if (section.title) {
+        // Process headings and paragraphs
+        let currentSection = null;
+        
+        paragraphs.forEach(paragraph => {
+            paragraph = paragraph.trim();
+            
+            // Check if this is a heading
+            if (this.isHeading(paragraph)) {
+                // Create a section heading
                 const heading = document.createElement('h3');
-                heading.textContent = section.title;
-                heading.className = 'academic-heading';
-                documentElement.appendChild(heading);
-            }
-            
-            // Create paragraphs for the content
-            const paragraphs = section.content.split('\n\n')
-                .filter(p => p.trim().length > 0);
-            
-            paragraphs.forEach(paragraph => {
+                heading.className = 'document-heading';
+                heading.innerHTML = `<strong>${paragraph}</strong>`;
+                container.appendChild(heading);
+                
+                // Create a new section container
+                currentSection = document.createElement('div');
+                currentSection.className = 'document-section';
+                container.appendChild(currentSection);
+            } 
+            // Regular paragraph
+            else {
                 const p = document.createElement('p');
-                p.textContent = paragraph.trim();
-                p.className = 'academic-paragraph';
-                documentElement.appendChild(p);
-            });
+                
+                // Apply special formatting
+                p.innerHTML = this.applySpecialFormatting(paragraph);
+                
+                // Add to appropriate container
+                if (currentSection) {
+                    currentSection.appendChild(p);
+                } else {
+                    container.appendChild(p);
+                }
+            }
         });
         
-        // Add academic styling if not already present
-        this.addAcademicStyles();
+        // Add the stamp as a visual element at the end
+        this.addApprovalStamp(container);
+        
+        return container;
     }
     
     /**
-     * Identify document sections based on bold headings
-     * @param {string} content - The document content
-     * @returns {Array} - Array of section objects with title and content
+     * Check if a paragraph is likely a heading
+     * @param {string} paragraph - The paragraph text
+     * @returns {boolean} - Whether it's a heading
      */
-    static identifySections(content) {
-        // Split by headings (assuming headings are wrapped in ** or are on their own line)
-        const sectionPattern = /\*\*(.*?)\*\*|^([A-ZÕŠŽÜÄÖÕ][a-zõšžüäöõ]+(\s+[A-ZÕŠŽÜÄÖÕ][a-zõšžüäöõ]+)*)$/gm;
+    static isHeading(paragraph) {
+        // Specifically identify common Lithuanian document section headings
+        const lithuanianHeadings = [
+            'Įvadas', 'Išvada', 'Išvados', 'Kodėl', 'Kaip', 'Ką', 'Apie',
+            'Katės istorija ir kultūra', 'Katės paradoksas', 'Katė –', 'Kodėl katės ypatingos'
+        ];
         
-        const sections = [];
-        let lastIndex = 0;
-        let match;
-        let sectionText = '';
-        
-        // Find section markers
-        const matches = content.match(/\*\*([^*]+)\*\*/g) || [];
-        
-        if (matches.length > 0) {
-            // Process content with headings
-            matches.forEach((heading, index) => {
-                const title = heading.replace(/\*/g, '').trim();
-                const startIndex = content.indexOf(heading);
-                const endIndex = index < matches.length - 1 ? 
-                    content.indexOf(matches[index + 1]) : 
-                    content.length;
-                
-                if (index === 0 && startIndex > 0) {
-                    // Add content before first heading as intro section
-                    sections.push({
-                        title: '',
-                        content: content.substring(0, startIndex).trim()
-                    });
-                }
-                
-                // Add this section
-                const sectionContent = content.substring(
-                    startIndex + heading.length,
-                    endIndex
-                ).trim();
-                
-                sections.push({
-                    title: title,
-                    content: sectionContent
-                });
-            });
-        } else {
-            // No headings found - try to identify by line breaks and paragraph structure
-            const lines = content.split('\n');
-            let currentTitle = '';
-            let currentContent = '';
-            
-            lines.forEach(line => {
-                const trimmedLine = line.trim();
-                
-                // Skip empty lines
-                if (!trimmedLine) {
-                    currentContent += '\n\n';
-                    return;
-                }
-                
-                // If line is short and followed by empty line, might be a heading
-                if (trimmedLine.length < 50 && 
-                    trimmedLine === trimmedLine.replace(/[a-z]/g, '').toUpperCase()) {
-                    
-                    // If we have content from previous section, add it
-                    if (currentContent.trim()) {
-                        sections.push({
-                            title: currentTitle,
-                            content: currentContent.trim()
-                        });
-                    }
-                    
-                    currentTitle = trimmedLine;
-                    currentContent = '';
-                } else {
-                    // Regular content line
-                    currentContent += trimmedLine + '\n';
-                }
-            });
-            
-            // Add final section
-            if (currentContent.trim()) {
-                sections.push({
-                    title: currentTitle,
-                    content: currentContent.trim()
-                });
-            }
-            
-            // If no sections were identified, treat whole content as one section
-            if (sections.length === 0) {
-                sections.push({
-                    title: '',
-                    content: content.trim()
-                });
+        // Check for exact heading matches (case-insensitive)
+        for (const heading of lithuanianHeadings) {
+            if (paragraph.toLowerCase().startsWith(heading.toLowerCase())) {
+                return true;
             }
         }
         
-        return sections;
+        // Headings are typically short and often end with question mark or colon
+        if (paragraph.length < 80 && 
+            (paragraph.endsWith('?') || paragraph.endsWith(':'))) {
+            return true;
+        }
+        
+        // Check for common heading patterns
+        if (paragraph.match(/^[\w\s\-–—]+$/i) && paragraph.length < 60) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Clean text by removing unwanted characters and HTML tags
+     * @param {string} text - The raw text content
+     * @returns {string} - Cleaned text
+     */
+    static cleanText(text) {
+        // Remove HTML tags
+        const div = document.createElement('div');
+        div.innerHTML = text;
+        return div.textContent || div.innerText || '';
+    }
+    
+    /**
+     * Apply special formatting to text
+     * @param {string} text - The paragraph text
+     * @returns {string} - Formatted text with HTML tags
+     */
+    static applySpecialFormatting(text) {
+        // Make text between ** bold
+        let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // Identify references and citations
+        formattedText = formattedText.replace(/\(([\w\s\.,]+, \d{4})\)/g, '<span class="citation">($1)</span>');
+        
+        return formattedText;
+    }
+    
+    /**
+     * Add the approval stamp to the document
+     * @param {HTMLElement} container - The document container
+     */
+    static addApprovalStamp(container) {
+        // Create the stamp container
+        const stampDiv = document.createElement('div');
+        stampDiv.className = 'boss-approval-stamp';
+        stampDiv.textContent = 'ŠEFO PATVIRTINTA';
+        
+        // Add the stamp to the bottom of the document
+        container.appendChild(stampDiv);
+        
+        // Trigger the stamp animation after a delay
+        setTimeout(() => {
+            stampDiv.classList.add('stamp-visible');
+        }, 500);
     }
     
     /**
@@ -154,7 +150,7 @@ class DocumentFormatter {
         const style = document.createElement('style');
         style.id = 'academic-styles';
         style.textContent = `
-            #finalResult {
+            .formatted-document {
                 font-family: 'Times New Roman', serif;
                 line-height: 1.6;
                 text-align: justify;
@@ -162,29 +158,56 @@ class DocumentFormatter {
                 position: relative;
             }
             
-            .academic-heading {
+            .document-heading {
                 font-weight: bold;
                 margin-top: 1.5em;
                 margin-bottom: 1em;
                 font-size: 1.2em;
             }
             
-            .academic-paragraph {
+            .document-section p {
                 margin-bottom: 1em;
                 text-indent: 1.5em;
             }
             
-            .academic-paragraph:first-of-type {
+            .document-section p:first-of-type {
                 text-indent: 0;
             }
             
             .boss-approval-stamp {
                 margin-top: 40px;
                 margin-bottom: 20px;
+                padding: 15px;
+                width: 200px;
+                text-align: center;
+                color: #ff3333;
+                font-weight: bold;
+                font-size: 24px;
+                letter-spacing: 1px;
+                font-family: 'Arial Black', sans-serif;
+                border: 5px solid #ff3333;
+                border-radius: 10px;
+                transform: rotate(-5deg);
+                opacity: 0;
+                margin-left: auto;
+                transition: opacity 0.5s, transform 0.5s;
             }
             
-            [data-theme="dark"] #finalResult {
+            .boss-approval-stamp.stamp-visible {
+                opacity: 1;
+                transform: rotate(0deg);
+            }
+            
+            .citation {
+                color: #666;
+            }
+            
+            [data-theme="dark"] .formatted-document {
                 color: #e0e0e0;
+            }
+            
+            [data-theme="dark"] .citation {
+                color: #aaa;
             }
         `;
         
@@ -195,11 +218,41 @@ class DocumentFormatter {
      * Format document when boss approves
      */
     static setupFormatOnApproval() {
+        // Add our academic styles
+        this.addAcademicStyles();
+        
+        // Listen for document completion
         document.addEventListener('boss-completed-work', () => {
             setTimeout(() => {
-                this.formatAcademicDocument();
+                const text = document.getElementById('finalResult').textContent;
+                const formattedDocument = this.formatFinalDocument(text);
+                if (formattedDocument) {
+                    const finalResultElement = document.getElementById('finalResult');
+                    finalResultElement.innerHTML = '';
+                    finalResultElement.appendChild(formattedDocument);
+                }
             }, 1500);
         });
+        
+        // Also format the document if the StampEffects.showBossApproval is called
+        const originalShowBossApproval = window.StampEffects?.showBossApproval;
+        if (window.StampEffects && originalShowBossApproval) {
+            window.StampEffects.showBossApproval = function() {
+                originalShowBossApproval.apply(this, arguments);
+                
+                // Format the document after the stamp is shown
+                setTimeout(() => {
+                    const finalResultElement = document.getElementById('finalResult');
+                    if (finalResultElement && finalResultElement.textContent) {
+                        const formattedDocument = DocumentFormatter.formatFinalDocument(finalResultElement.textContent);
+                        if (formattedDocument) {
+                            finalResultElement.innerHTML = '';
+                            finalResultElement.appendChild(formattedDocument);
+                        }
+                    }
+                }, 1000);
+            };
+        }
     }
 }
 

@@ -100,5 +100,63 @@ class DocUtils {
     }
 }
 
-// Make available globally
+/**
+ * Cleans markdown formatting from text
+ * @param {string} text - Text containing markdown formatting
+ * @returns {string} - Clean text without markdown
+ */
+function cleanMarkdownFormatting(text) {
+    if (!text) return '';
+    
+    return text
+        // Remove headers
+        .replace(/^#+\s+(.*)$/gm, '$1')
+        // Remove bold/italic markers
+        .replace(/(\*\*|\*|__|_)(.*?)\1/g, '$2')
+        // Remove horizontal rules
+        .replace(/^\s*[-*_]{3,}\s*$/gm, '')
+        // Remove blockquotes
+        .replace(/^>\s+(.*)$/gm, '$1')
+        // Remove code blocks
+        .replace(/```[\s\S]*?```/g, '')
+        // Remove inline code
+        .replace(/`([^`]+)`/g, '$1')
+        // Remove markdown links but keep text
+        .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+        // Remove HTML tags
+        .replace(/<\/?[^>]+(>|$)/g, '')
+        // Fix multiple newlines
+        .replace(/\n{3,}/g, '\n\n');
+}
+
+/**
+ * Updates the boss's prompt to avoid generating markdown formatting
+ * @param {string} prompt - The original prompt
+ * @returns {string} - Modified prompt
+ */
+function addMarkdownAvoidanceInstructions(prompt) {
+    const markdownAvoidanceText = `
+SVARBU: Nenaudokite Markdown formatavimo savo atsakyme:
+- NENAUDOKITE ženklelių # antraštėms 
+- NENAUDOKITE žvaigždučių * ar pabraukimų _ teksto paryškinimui ar kursyvui
+- NENAUDOKITE brūkšnelių --- horizontalioms linijoms
+- NENAUDOKITE > citatoms
+- NENAUDOKITE \`\`\` ar \` kodo blokams
+- NENAUDOKITE [tekstas](nuoroda) nuorodoms
+- Rašykite paprastą, neformatuotą tekstą
+
+`;
+    
+    // Find a good spot to insert the instructions - preferably after any "SVARBU:" section
+    if (prompt.includes('SVARBU:')) {
+        return prompt.replace(/SVARBU:.*?(\n\n|\n$)/s, match => match + markdownAvoidanceText);
+    }
+    
+    // Otherwise, add to beginning of prompt
+    return markdownAvoidanceText + prompt;
+}
+
+// Make utilities available globally
+window.cleanMarkdownFormatting = cleanMarkdownFormatting;
+window.addMarkdownAvoidanceInstructions = addMarkdownAvoidanceInstructions;
 window.DocUtils = DocUtils;

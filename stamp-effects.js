@@ -97,11 +97,43 @@ class StampEffects {
     }
     
     /**
+     * Clean markdown formatting from text before displaying it
+     * @param {string} text - Text that might contain markdown formatting
+     * @returns {string} - Clean text without markdown formatting
+     */
+    static cleanMarkdownFormatting(text) {
+        if (!text) return '';
+        
+        return text
+            // Remove headers (# Header)
+            .replace(/^#+\s+(.*)$/gm, '$1')
+            // Remove bold/italic markers
+            .replace(/(\*\*|\*|__|_)(.*?)\1/g, '$2')
+            // Remove horizontal rules
+            .replace(/^\s*[-*_]{3,}\s*$/gm, '')
+            // Remove blockquotes
+            .replace(/^>\s+(.*)$/gm, '$1')
+            // Remove code blocks
+            .replace(/```[\s\S]*?```/g, '')
+            // Remove inline code
+            .replace(/`([^`]+)`/g, '$1')
+            // Remove markdown links but keep text
+            .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+            // Remove HTML tags
+            .replace(/<\/?[^>]+(>|$)/g, '')
+            // Normalize multiple newlines
+            .replace(/\n{3,}/g, '\n\n');
+    }
+    
+    /**
      * Add a signature effect to the final result
      */
     static addSignatureEffect() {
         const finalResult = document.getElementById('finalResult');
         if (!finalResult) return;
+        
+        // Clean any markdown in the text first
+        finalResult.textContent = this.cleanMarkdownFormatting(finalResult.textContent);
         
         // Create a signature div
         const signature = document.createElement('div');
