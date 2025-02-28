@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
             getPreferredModels: async function() {
                 return await ApiHelper.getAvailableModels();
             },
-             // Added fetchWithInternetAccess function
             fetchWithInternetAccess: async function(url, options = {}) {
                 try {
                     const response = await fetch(url, options);
@@ -56,115 +55,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressFill = document.getElementById('progressFill');
     const progressText = document.getElementById('progressText');
 
-    // Define worker roles with improved Lithuanian personalities
+    // Define worker roles with improved Lithuanian personalities and prompts
     const workers = {
         writer: {
             name: "Writer",
-            systemPrompt: `Tu esi Jonas, talentingas rašytojas iš Lietuvos, turintis aukštąjį filologijos išsilavinimą. 
-SVARBU: Visada rašyk taisyklinga lietuvių kalba, su puikiu sintaksės, morfologijos ir leksikos išmanymu. Vartok turtingą, vaizdingą kalbą. 
-
-Kaip tikras lietuvių rašytojas:
-- Vartok autentiškas lietuviškas frazes ir posakius (pvz., "kaip šuo ant uodegos nunešė", "nė velnio nematė", "kiaurai žemę prasmegti")
-- Sugebėk kurti sudėtingus, bet sklandžius sakinius su šalutiniais dėmenimis
-- Tinkamai naudok linksnių sistemą (kilmininkas, naudininkas, galininkas, įnagininkas, vietininkas, šauksmininkas)
-- Išnaudok lietuvių kalbos žodžių darybos galimybes (priesagas, priešdėlius)
-- Atkreipk dėmesį į gimines, skaičius ir laikus
-
-Kai rašai pirmąjį juodraštį, pradėk kūrybišku įžanginiu sakiniu, kuris pritrauktų dėmesį. Venk angliškų frazių kaip "As the Writer", niekada nenaudok anglicizmų. Savo atsakyme paminėk, kad perduodi darbą Gabijai patikslinimui. Tavo tikslas - sukurti tekstą, kuris būtų ne tik informatyvus, bet ir stilistiškai išbaigtas, atspindintis lietuviškos rašytinės tradicijos gerąsias savybes.
-
-DABAR: Gali rašyti straipsnius, blogo įrašus, Twitter postus ir kitokio tipo tekstus, atsižvelgdamas į gautą užduotį (promptą).`,
+            systemPrompt: `Tu esi Jonas, talentingas rašytojas-genijus iš Lietuvos. Tavo užduotis - kurti aukštos kokybės tekstus, kurie yra ne tik informatyvūs, bet ir įdomūs bei įtikinami.`,
             className: "writer",
-            model: () => writerModel.value
+            model: () => writerModel.value,
+            thoughtProcess: [], // Array to store the thought process
         },
         researcher: {
             name: "Researcher",
-            systemPrompt: `Tu esi Gabija, aukščiausios kvalifikacijos tyrėja iš Lietuvos, turintis mokslinį daktaro laipsnį. 
-SVARBU: Kalbi ir rašai nepriekaištinga lietuvių kalba su akademiniu žodynu ir terminija.
-
-Kaip profesionali tyrėja, tu:
-- **Kruopščiai tikrini faktus ir naudoji patikimus šaltinius iš interneto arba turimų žinių.**
-- Logiškai struktūruoji tyrimą, remiantis lietuviška moksline metodologija
-- Sugebėk paaiškinti sudėtingas sąvokas paprastai, bet tiksliai
-- Naudoji tikslią lietuvišką terminologiją savo srityje
-- Cituoji šaltinius pagal lietuviškus akademinius standartus (pvz., "Kaip teigia profesorius Vardenis (2023)...")
-- **Jei reikia, naudokis internetu, kad surastum aktualią ir patikimą informaciją.**
-
-Kai gauni tekstą iš Jono, išanalizuok jį, papildyk faktais, statistika ir akademinėmis nuorodomis, tačiau išlaikyk sklandų lietuvių kalbos stilių. Vengk svetimybių, geriau naudok lietuviškus terminus. Tekstą pradėk profesionaliu įvadu (pvz., "Išanalizavusi Jono tekstą, papildžiau jį šiais moksliniais aspektais..."). Savo atsakyme paminėk, kad perduodi darbą Vytautui vertinti.
-
-DABAR: Gali rašyti straipsnius, blogo įrašus, Twitter postus, atlikti tyrimus ir pateikti informaciją įvairiais formatais, atsižvelgiant į užduotį.`,
+            systemPrompt: `Tu esi Gabija, aukščiausios kvalifikacijos tyrėja. Tavo užduotis - kruopščiai tikrinti faktus, pateikti patikimus šaltinius ir užtikrinti teksto akademinį pagrįstumą.`,
             className: "researcher",
-            model: () => researcherModel.value
+            model: () => researcherModel.value,
+            thoughtProcess: [],
         },
         critic: {
             name: "Critic",
-            systemPrompt: `Tu esi Vytautas, aukščiausios klasės literatūros kritikas iš Lietuvos, pasižymintis gebėjimu konstruktyviai analizuoti tekstus.
-SVARBU: Rašai itin taisyklinga lietuvių kalba, puikiai išmanydamas jos sintaksę, morfologiją ir leksiką.
-
-Kaip profesionalus kritikas:
-- Išlaikai balansą tarp pozityvios ir negatyvios kritikos
-- Visada pradedi nuo teksto stiprybių identifikavimo
-- Konkrečiai nurodai problemines vietas, cituodamas jas
-- Vengdamas subjektyvių vertinimų ("man nepatinka"), pateiki objektyvius argumentus
-- Nesistengi "pataisyti" teksto, o tik nurodai, kas galėtų būti tobulintina
-
-Tavo kritikos metodas susideda iš:
-1. Teksto stipriųjų pusių įvardijimo (aiškumas, originalumas, įtaiga)
-2. Tobulintinų aspektų nustatymo (struktūra, argumentacija, kalbos vartojimas)
-3. Konkrečių pasiūlymų, kaip būtų galima tekstą patobulinti
-4. Bendro įvertinimo, kaip tekstas atitinka savo tikslą
-
-Pradėk savo analizę sakydamas "Peržiūrėjau Gabijos papildytą tekstą". Baigdamas paminėk, kad perduodi darbą Eglei galutiniam redagavimui.
-
-DABAR: Gali analizuoti ir kritikuoti įvairius tekstus - straipsnius, blogo įrašus, Twitter postus ir kt., atsižvelgdamas į užduotį.`,
+            systemPrompt: `Tu esi Vytautas, aukščiausios klasės literatūros kritikas. Tavo užduotis - konstruktyviai analizuoti tekstus, nurodant stipriąsias ir tobulintinas vietas, bei siūlyti konkrečius patobulinimus.`,
             className: "critic",
-            model: () => criticModel.value
+            model: () => criticModel.value,
+            thoughtProcess: [],
         },
         editor: {
             name: "Editor",
-            systemPrompt: `Tu esi Eglė, profesionali lietuvių kalbos redaktorė su ilgamete patirtimi leidyboje. 
-SVARBU: Tavo lietuvių kalba yra tobula, be jokių klaidų - gramatikos, skyrybos, sintaksės, stilistikos ar kitokių.
-
-Kaip vyriausioji redaktorė:
-- Turi išskirtinį akylumą pastebėti net mažiausias gramatines ar stilistines klaidas
-- Meistriškai tobulini teksto rišlumą, nuoseklumą ir aiškumą
-- Išlaikai autoriaus stilių, bet pašalini nereikalingus žodžius ar pastraipas
-- Užtikrini, kad žodžių tvarka sakiniuose būtų natūrali ir sklandžiai skaitoma
-- Išmanai visas naujausias lietuvių kalbos taisykles ir rekomendacijas
-
-Gavusi Vytauto kritikuotą tekstą, iš pradžių identifikuok visas klaidas ir stilistinius trūkumus, tada pateik galutinį, išbaigtą tekstą. Būk ypač atidi veiksmažodžių formoms, dalyvių vartojimui, linksnių derėjimui ir sakinio dalių ryšiams. Tekstą pradėk profesionaliu įvadu (pvz., "Atsižvelgdama į Vytauto pastabas, pataisiau tekstą...").
-
-SVARBU: Tavo redaguotas tekstas bus galutinis rezultatas, todėl jis turi būti absoliučiai tobulas gramatiškai, stilistiškai ir struktūriškai - tokios kokybės, kad būtų tinkamas publikuoti prestižiniame leidinyje.
-
-DABAR: Gali redaguoti ir tobulinti įvairius tekstus - straipsnius, blogo įrašus, Twitter postus ir kt., atsižvelgiant į užduotį.`,
+            systemPrompt: `Tu esi Eglė, profesionali lietuvių kalbos redaktorė. Tavo užduotis - užtikrinti, kad tekstas būtų be klaidų, stilingas, sklandus ir atitiktų aukščiausius kalbos standartus.`,
             className: "editor",
-            model: () => editorModel.value
+            model: () => editorModel.value,
+            thoughtProcess: [],
         },
         boss: {
             name: "Boss",
-            systemPrompt: `Tu esi Tauris, įmonės direktorius ir galutinis sprendimų priėmėjas, pasižymintis strateginiu mąstymu ir lyderystės savybėmis. 
-SVARBU: Kalbi ir rašai autoritetinga, aiškia lietuvių kalba, derindamas profesionalumą su vadovavimo įgūdžiais.
-
-Kaip biuro vadovas:
-- Sugebi įvertinti visų darbuotojų indėlį ir apjungti jį į vieną nuoseklų rezultatą
-- Priimi galutinius sprendimus, pagrįstus visų specialistų įžvalgomis
-- Sugebi išskirti esmę ir atmesti nereikalingas detales
-- Kalbi tiesiai, aiškiai ir įtikinamai, naudodamas profesionalų toną
-- Demonstruoji strateginį mąstymą ir platesnį konteksto supratimą
-
-Tavo tikslas - peržvelgti visų ankstesnių darbuotojų (Jono, Gabijos, Vytauto ir Eglės) darbą ir pateikti GALUTINĘ versiją. Pradėk nuo profesionalaus įvado "Ačiū visiems už įdėtą darbą! Štai mano galutinė šio teksto versija:". 
-
-Galutiniame tekste turi būti:
-1. Aiški struktūra su įvadu, dėstymu ir išvadomis
-2. Gabijos akademiniai faktai ir įžvalgos, pateikti sklandžiai 
-3. Vytauto kritikos įgyvendinimas, išlaikant stipriuosius aspektus
-4. Eglės kalbos taisymai, užtikrinantys teksto kokybę
-5. Jono originalios idėjos ir kūrybiškumas
-
-Tavo rezultatas turi būti profesionalus, išbaigtas akademinis tekstas, tinkamas publikavimui.
-
-DABAR: Gali peržiūrėti ir pateikti galutinę įvairių tekstų versiją - straipsnių, blogo įrašų, Twitter postų ir kt., atsižvelgdamas į užduotį.`,
+            systemPrompt: `Tu esi Tauris, įmonės direktorius. Tavo užduotis - peržiūrėti visų darbuotojų darbą ir pateikti galutinę, aukščiausios kokybės teksto versiją.`,
             className: "boss",
-            model: () => bossModel ? bossModel.value : (openaiModel ? openaiModel.value : 'openai')
+            model: () => bossModel ? bossModel.value : (openaiModel ? openaiModel.value : 'openai'),
+            thoughtProcess: [],
         }
     };
 
@@ -172,21 +98,21 @@ DABAR: Gali peržiūrėti ir pateikti galutinę įvairių tekstų versiją - str
     let conversationHistory = [];
     let isCollaborationActive = false;
     let currentIteration = 0;
-    let maxIterations = 1; // Default to 1 iteration (4 messages - one from each worker)
+    let maxIterations = 1; // Default to 1 iteration
     let currentWorkerIndex = 0;
     let exchangeDelay = 1000;
     let latestResult = "";
 
-    // Worker execution sequence - improved sequence with Šefas Tauris at the end of each iteration
+    // Worker execution sequence
     const workerSequence = ['writer', 'researcher', 'critic', 'editor'];
 
     // Add boss as the final worker only at the end of all iterations
     const finalWorker = 'boss';
 
-    // Track failed models to avoid retrying them
+    // Track failed models
     let failedModels = {};
 
-    // Available backup models in order of preference
+    // Available backup models
     const backupModels = [
         'openai-large',
         'openai-reasoning',
@@ -222,11 +148,12 @@ DABAR: Gali peržiūrėti ir pateikti galutinę įvairių tekstų versiją - str
         downloadResultBtn.disabled = true;
     });
 
-    // Load available models on page load
+    // Load available models
     populateModelOptions();
 
     async function populateModelOptions() {
-        try {
+        // ... (same as before) ...
+         try {
             updateStatus("Loading available models...");
 
             // Use our new ApiConnector to get preferred models
@@ -302,6 +229,7 @@ DABAR: Gali peržiūrėti ir pateikti galutinę įvairių tekstų versiją - str
     }
 
     function setFallbackModels() {
+        // ... (same as before) ...
         const fallbackModels = [
             { id: 'writerModel', value: 'openai-large', label: 'OpenAI GPT-4o' },
             { id: 'researcherModel', value: 'deepseek', label: 'DeepSeek-V3' },
@@ -323,11 +251,12 @@ DABAR: Gali peržiūrėti ir pateikti galutinę įvairių tekstų versiją - str
     }
 
     function updateStatus(message, type = "") {
+        // ... (same as before) ...
         statusMessage.textContent = message;
         statusMessage.className = type;
     }
-
     async function startCollaboration() {
+         // ... (same as before) ...
         if (isCollaborationActive) return;
 
         const initialTopic = initialPrompt.value.trim();
@@ -369,6 +298,7 @@ DABAR: Gali peržiūrėti ir pateikti galutinę įvairių tekstų versiją - str
     }
 
     function stopCollaboration() {
+        // ... (same as before) ...
         isCollaborationActive = false;
         startBtn.disabled = false;
         stopBtn.disabled = true;
@@ -376,6 +306,7 @@ DABAR: Gali peržiūrėti ir pateikti galutinę įvairių tekstų versiją - str
     }
 
     function clearCollaboration() {
+         // ... (same as before, *BUT ADD THOUGHT PROCESS RESET*) ...
         stopCollaboration();
         chatLog.innerHTML = '';
         finalResult.textContent = '';
@@ -383,6 +314,12 @@ DABAR: Gali peržiūrėti ir pateikti galutinę įvairių tekstų versiją - str
         conversationHistory = [];
         failedModels = {};
         latestResult = "";
+
+        // Reset thought processes
+        for (const workerKey in workers) {
+            workers[workerKey].thoughtProcess = [];
+        }
+
 
         // Reset progress
         progressFill.style.width = '0%';
@@ -426,65 +363,71 @@ DABAR: Gali peržiūrėti ir pateikti galutinę įvairių tekstų versiją - str
             let prompt;
 
             if (isFirstMessage) {
-                // First message - determine the type of text needed
+                // First message to Jonas (Writer) - Very specific instructions.
                 prompt = `Parašyk ${initialMessage}.
 
-SVARBU: Rašyk kaip Jonas, lietuviškai, natūralia kalba, ir nevartok angliškų frazių.
-Pradėk neformalia įžanga, tada pateik savo tekstą, ir pabaik perduodamas darbą Gabijai.
-Tavo tekstas turėtų atitikti prašomo tipo tekstą (pvz., straipsnis, blogo įrašas, Twitter postas ir t.t.)`;
+SVARBU: 
+- Tekstas TURI būti parašytas TIKSLIAI pagal užduoties tipą (straipsnis, blogo įrašas, Twitter žinutė, ir t.t.).
+- Pradėk kūrybišku, dėmesį patraukiančiu įvadiniu sakiniu.
+- Rašyk *daugiausia* taisyklinga lietuvių kalba.  Gali naudoti anglicizmus ar kitų kalbų žodžius, BET TIK JEI tai pagerina tekstą ir TURI tam pagrįstą priežastį (pvz., "Naudoju 'deadline', nes lietuviškas atitikmuo nėra toks veržlus").  Kiekvieną tokį atvejį *privalai* trumpai paaiškinti.
+- Pabaigoje perduok darbą Gabijai (tyrėjai).`;
             } else {
-                // Create a much improved prompt based on the collaboration history
+                // Create prompts based on the collaboration history
                 let historyText = "";
 
                 if (ApiConnector && typeof ApiConnector.formatConversationForApi === 'function') {
                     historyText = ApiConnector.formatConversationForApi(conversationHistory);
                     historyText = ApiConnector.trimConversationHistory(historyText);
                 } else {
-                    // Fallback to original method
+                    // Fallback
                     historyText = formatCollaborationHistory();
                 }
 
-                // Customize the prompt based on which worker is responding
+                // Customize prompts for each worker.  These are much more specific now.
                 switch (workerKey) {
                     case 'researcher':
                         prompt = `${historyText}
 
-Dabar Tu esi Gabija, tyrėja. Peržiūrėk Jono parašytą tekstą ir papildyk jį moksliniais faktais,
-statistika ir akademinėmis nuorodomis. **Jei reikia, atlik papildomus tyrimus internete.** Rašyk natūralia lietuvių kalba, kaip tikra Gabija.
-Išlaikyk pagrindinę teksto struktūrą, bet pridėk vertingos informacijos ir citatų.
-Pabaigoje perduok darbą Vytautui vertinti.
+Dabar Tu esi Gabija, tyrėja.
 
-SVARBU: Reaguok į ankstesnį tekstą, išlaikydama kontekstą ir tęsdama mintį. Naudok tikrus akademinius
-šaltinius ir statistiką, kuri pagrįstų teiginius. **Pateik nuorodas į šaltinius, jei įmanoma.**`;
+SVARBU:
+- Peržiūrėk Jono tekstą ir papildyk jį *tiksliąja* moksline informacija: faktais, statistika, akademinėmis nuorodomis.
+- **BŪTINAI atlik papildomus tyrimus internete, jei reikia.** Naudokis internetu *aktyviai* ieškodama patikimos ir aktualios informacijos.
+- Rašyk taisyklinga lietuvių kalba, akademiniu stiliumi.  Venk neaiškumų ir abstrakcijų.
+- Išlaikyk pagrindinę teksto struktūrą, bet *drąsiai* keisk, jei reikia pagerinti turinio tikslumą.
+- *Privalai* pateikti nuorodas į šaltinius, kur įmanoma (naudok lietuviškus akademinius standartus).
+- Pabaigoje perduok darbą Vytautui (kritikui).`;
                         break;
                     case 'critic':
                         prompt = `${historyText}
 
-Dabar Tu esi Vytautas, kritikas. Įvertink Gabijos patobulintą tekstą, nurodyk trūkumus
-ir pasiūlyk, ką būtų galima tobulinti. Būk konstruktyviai kritiškas ir rašyk natūralia
-lietuvių kalba, kaip tikras Vytautas. Pabaigoje perduok darbą Eglei galutiniam redagavimui.
+Dabar Tu esi Vytautas, kritikas.
 
-SVARBU: Analizuok teksto logiką, struktūrą, argumentus ir šaltinių naudojimą. Pasiūlyk
-konkrečius patobulinimus, kuriuos Eglė galėtų įgyvendinti.`;
+SVARBU:
+- Įvertink Gabijos patobulintą tekstą.  Būk *konstruktyviai* kritiškas.
+- Pradėk nuo teksto *stiprybių*.  Kas *gerai* padaryta?
+- Tada nurodyk *konkrečius* trūkumus ir tobulintinas vietas.  Cituok problemines teksto dalis.
+- Pasiūlyk *labai konkrečius* patobulinimus, kuriuos Eglė (redaktorė) galėtų įgyvendinti.  Ne "pataisyk stilių", o "šį sakinį performuluok taip: ...".
+- Analizuok: teksto logiką, struktūrą, argumentų pagrįstumą, šaltinių naudojimą, kalbos aiškumą.
+- Rašyk taisyklinga lietuvių kalba.
+- Pabaigoje perduok darbą Eglei.`;
                         break;
                     case 'editor':
                         prompt = `${historyText}
 
-Dabar Tu esi Eglė, redaktorė. Atsižvelgdama į Vytauto kritiką, pataisyk ir patobulink
-tekstą. Pateik galutinę, išbaigtą versiją lietuvių kalba. Šis tekstas bus naudojamas
-kaip galutinis rezultatas, todėl įsitikink, kad jis yra aiškus, rišlus ir profesionalus.
-${currentIteration + 1 === maxIterations ? "Tai bus priešpaskutinė versija prieš šefo peržiūrą, todėl padaryk ją kuo tobulesnę." : ""}
+Dabar Tu esi Eglė, redaktorė.
 
-SVARBU: Išlaikyk originalias idėjas ir temas, bet ištaisyk gramatines klaidas, pagerink tekstą stilistiškai,
-ir užtikrink, kad jis atitinka reikalavimus.`;
+SVARBU:
+- Atsižvelgdama į Vytauto *labai konkrečius* nurodymus, pataisyk ir patobulink tekstą.
+- Tavo tikslas – pateikti *galutinę*, *išbaigtą* teksto versiją, kuri būtų *visiškai* be klaidų (gramatikos, skyrybos, stiliaus, logikos).
+- Šis tekstas bus naudojamas kaip galutinis rezultatas.  Jis TURI būti nepriekaištingos kokybės, tinkamas publikavimui.
+- Išlaikyk originalias idėjas ir temą, bet *griežtai* laikykitės lietuvių kalbos taisyklių.
+- Būk *ypač* atidi: veiksmažodžių formoms, dalyviams, linksniams, sakinio dalių ryšiams, žodžių tvarkai.
+- Jei tai priešpaskutinė iteracija (prieš šefo peržiūrą), padaryk tekstą *kuo tobulesnį*.
+- Pradėk nuo profesionalaus įvado, pvz., "Atsižvelgdama į Vytauto pastabas, atlikau šiuos pataisymus: ... [pateik pakeitimų sąrašą]".`;
                         break;
                     case 'writer':
-                        prompt = `${historyText}
-
-kay, here's the updated writer prompt, incorporating the changes while maintaining the original structure and logic as much as possible, blending the new requirements with the old:
-
-case 'writer':
-                        prompt = `${historyText}
+                       prompt = `${historyText}
 
 Dabar Tu esi Jonas, rašytojas-genijus. Peržiūrėk Eglės pataisytą tekstą ir sukurk naują, patobulintą versiją, atsižvelgdamas į visus ankstesnius komentarus (Gabijos, Vytauto ir Eglės).  Tu *gali* naudoti anglicizmus ar kitų kalbų žodžius, JEIGU manai, kad tai *pagerina* tekstą ir atitinka TAVO, kaip genijaus, stilių, *bet* vis tiek stenkis rašyti *daugiausia* taisyklinga lietuvių kalba, išlaikydamas aukštą rašymo kokybę.
 
@@ -500,7 +443,8 @@ SVARBU:
                 }
             }
 
-            // Try to get a response with automatic model fallback
+            // ... (rest of the continueCollaboration function, including error handling, remains largely the same) ...
+             // Try to get a response with automatic model fallback
             let response = await tryGenerateResponseWithFallback(prompt, worker.systemPrompt, worker.model(), workerKey);
 
             // Validate response
@@ -531,6 +475,12 @@ SVARBU:
 
             // Add the response to the chat log
             addMessageToChatLog(worker.name, response, worker.className);
+
+            // ************* Thought Process Analysis *************
+            analyzeThoughtProcess(worker, response);
+            displayThoughtProcess(workerKey);
+            // ************* End Thought Process Analysis *************
+
             updateStatus(`${worker.name} responded successfully`);
 
             // Continue to the next worker
@@ -607,6 +557,7 @@ SVARBU:
 
     // Get next available model that hasn't failed yet
     function getNextAvailableModel(workerKey) {
+         // ... (same as before) ...
         // First check with ModelAvailability
         if (window.ModelAvailability) {
             const currentModel = workers[workerKey].model();
@@ -640,6 +591,7 @@ SVARBU:
 
     // Try generating response with enhanced retry logic - try 3 times before switching models
     async function tryGenerateResponseWithFallback(prompt, systemPrompt, model, workerKey) {
+        // ... (same as before) ...
         // Track which models we've already tried
         if (!failedModels[workerKey]) {
             failedModels[workerKey] = {};
@@ -730,6 +682,7 @@ SVARBU:
 
     // Add a function to check if the API is available
     async function checkApiAvailability() {
+         // ... (same as before) ...
         try {
             const response = await fetch('https://text.pollinations.ai/health', {
                 method: 'GET',
@@ -822,7 +775,7 @@ IMPORTANT INSTRUCTIONS:
                         failedModels[workerKey] = {};
                     }
 
-                    failedModels[workerKey][model] = (failedModels[workerKey][model] || 0) + 3; // Mark as failed 3 times to force switch
+                    failedModels[workerKey][model] = (failedModels[workerKey                    failedModels[workerKey][model] = (failedModels[workerKey][model] || 0) + 3; // Mark as failed 3 times to force switch
 
                     const nextModel = getNextAvailableModel(workerKey);
                     if (nextModel && nextModel !== model) {
@@ -844,6 +797,7 @@ IMPORTANT INSTRUCTIONS:
     }
 
     function addMessageToChatLog(sender, content, className) {
+        // ... (same as before) ...
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${className}`;
 
@@ -876,6 +830,7 @@ IMPORTANT INSTRUCTIONS:
     }
 
     function addThinkingIndicator(workerName, id) {
+         // ... (same as before) ...
         const messageDiv = document.createElement('div');
         messageDiv.className = `message thinking ${workerName === 'Writer' ? 'writer' : workerName === 'Researcher' ? 'researcher' : workerName === 'Critic' ? 'critic' : 'editor'}`;
         messageDiv.id = id;
@@ -901,6 +856,7 @@ IMPORTANT INSTRUCTIONS:
     }
 
     function removeThinkingIndicator(id) {
+         // ... (same as before) ...
         const element = document.getElementById(id);
         if (element) {
             element.remove();
@@ -908,10 +864,12 @@ IMPORTANT INSTRUCTIONS:
     }
 
     function scrollToBottom() {
+         // ... (same as before) ...
         chatLog.scrollTop = chatLog.scrollHeight;
     }
 
     function copyFinalResult() {
+         // ... (same as before) ...
         const textToCopy = finalResult.textContent;
 
         navigator.clipboard.writeText(textToCopy).then(() => {
@@ -931,8 +889,9 @@ IMPORTANT INSTRUCTIONS:
         });
     }
 
-    // Format the collaboration history in a way that helps maintain context
+    // Format the collaboration history
     function formatCollaborationHistory() {
+         // ... (same as before, but slightly simplified) ...
         let historyText = "COLLABORATION HISTORY:\n\n";
 
         // Make sure the topic is always included
@@ -964,8 +923,9 @@ IMPORTANT INSTRUCTIONS:
         return ApiConnector.trimConversationHistory(historyText);
     }
 
-    // Extract the final result from the last writer's contribution
+    // Extract the final result
     function extractFinalResult() {
+        // ... (same logic as before, but uses the updated cleanUpFinalResult) ...
         // Try to use the editor's final contribution when possible
         const contributions = conversationHistory.filter(msg =>
             msg.role !== 'System' && msg.content && msg.content.length > 100
@@ -978,24 +938,7 @@ IMPORTANT INSTRUCTIONS:
 
         if (lastEditorMsg) {
             // Extract just the document content, removing conversational parts
-            const content = lastEditorMsg.content;
-
-            // Remove common opening phrases
-            let cleanText = content
-                .replace(/^.*(štai pataisytas tekstas|štai galutinė versija|štai kaip pataisiau|peržiūrėjau tekstą).*?:/si, '')
-                .replace(/^.*?(štai rezultatas|pataisiau tekstą).*?:/si, '')
-                .trim();
-
-            // Remove common closing phrases
-            cleanText = cleanText
-                .replace(/tikiuosi, kad šis tekstas.*?$/si, '')
-                .replace(/linkiu sėkmės.*?$/si, '')
-                .replace(/perduodu šį tekstą.*?$/si, '')
-                .replace(/ačiū už galimybę.*?$/si, '')
-                .replace(/esu pasiruošusi atsakyti.*?$/si, '')
-                .trim();
-
-            return cleanText;
+           return cleanUpFinalResult(lastEditorMsg.content);
         }
 
         // Fallback to writer's text if editor's isn't available
@@ -1005,43 +948,23 @@ IMPORTANT INSTRUCTIONS:
 
         if (lastWriterMsg) {
             // Extract just the document content from writer's text
-            const content = lastWriterMsg.content;
-
-            return content
-                .replace(/^.*?(štai ką parašiau|štai mano tekstas|parašiau tokį tekstą).*?:/si, '')
-                .replace(/^.*?(štai mano juodraštis|štai pradinis variantas).*?:/si, '')
-                .replace(/gabija[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
-                .replace(/perduodu.*?$/si, '')
-                .trim();
+            return cleanUpFinalResult(lastWriterMsg.content);
         }
 
         // If no identifiable messages found, fall back to the original method
         return cleanUpFinalResult(conversationHistory[conversationHistory.length - 1]?.content || "");
     }
 
-    // Clean up the final result text to remove role intros and outros
+    // Clean up the final result text
     function cleanUpFinalResult(text) {
         if (!text) return '';
 
-        // Remove any conversational elements
+        // Remove any conversational elements, more robust handling of intros/outros.
         let cleaned = text
-            // Remove common Lithuanian introductions
-            .replace(/^.*?(štai ką parašiau|štai mano tekstas|peržiūrėjau tekstą|štai pataisytas tekstas).*?:/si, '')
-            // Remove signatures and handoffs
-            .replace(/gabija[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
-            .replace(/vytautas[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
-            .replace(/eglė[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
-            .replace(/jonas[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
-            .replace(/perduodu.*?gabijai.*$/si, '')
-            .replace(/perduodu.*?vytautui.*$/si, '')
-            .replace(/perduodu.*?eglei.*$/si, '')
-            .replace(/perduodu.*?jonui.*$/si, '')
-            // Remove other ending sentences
-            .replace(/tikiuosi.*?$/si, '')
-            .replace(/linkiu.*?$/si, '')
-            // Remove any remaining English phrases that might have slipped through
-            .replace(/as the (writer|researcher|critic|editor).*?:/gi, '')
-            .replace(/i've (drafted|enhanced|evaluated|refined).*?:/gi, '')
+            .replace(/^.*?(štai ką parašiau|štai mano tekstas|peržiūrėjau tekstą|štai pataisytas tekstas|atsižvelgdama į.*pataisiau|pateikiu galutinę versiją|mano galutinė versija|ačiū visiems).*\s*:/si, '') // Remove intros
+            .replace(/(gabija|vytautas|eglė|jonas|tauris|perduodu|tikiuosi|linkiu|su pagarba|šefas|redaktorė|tyrėja|rašytojas|kritikas)[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '') // Remove outros and names
+            .replace(/as the (writer|researcher|critic|editor|boss).*?:/gi, '') // Remove English intros
+            .replace(/i've (drafted|enhanced|evaluated|refined|reviewed).*?:/gi, '')  // Remove English intros
             .replace(/\[CONTENT_START\]/gi, '')
             .replace(/\[CONTENT_END\]/gi, '')
             .trim();
@@ -1049,19 +972,20 @@ IMPORTANT INSTRUCTIONS:
         return cleaned;
     }
 
-    // Display the final result in the UI
+    // Display the final result
     function displayFinalResult(resultText) {
+        // ... (same as before) ...
         const processedText = cleanUpFinalResult(resultText);
         finalResult.textContent = processedText;
     }
 
-    // Add the downloadAsDocument function that's referenced but missing
+    // Add the downloadAsDocument function
 
     /**
      * Downloads the final result as a Word document (.docx)
-     * Uses a simple text blob with .docx extension
      */
     function downloadAsDocument() {
+        // ... (same as before) ...
         try {
             const text = finalResult.textContent || '';
 
@@ -1101,8 +1025,45 @@ IMPORTANT INSTRUCTIONS:
         }
     }
 
-    // Fix the issue with null references in the initialization
+   // Thought Process Analysis Functions
+
+    function analyzeThoughtProcess(worker, response) {
+      //Basic analysis - just stores previous response as thought
+        worker.thoughtProcess.push(response);
+
+        // Limit the thought process history to a reasonable size
+        const maxThoughts = 20;
+        if(worker.thoughtProcess.length > maxThoughts) {
+            worker.thoughtProcess.shift(); // Remove oldest thought
+        }
+    }
+
+
+    function displayThoughtProcess(workerKey) {
+        const worker = workers[workerKey];
+        if (!worker) return;
+                const thoughtProcessDiv = document.querySelector(`.${worker.className} .thought-process`);
+        if (!thoughtProcessDiv) return;
+
+        thoughtProcessDiv.innerHTML = ''; // Clear previous thoughts
+
+        const title = document.createElement('h4');
+        title.textContent = "Mąstymo Procesas:";
+        thoughtProcessDiv.appendChild(title);
+
+        const list = document.createElement('ul');
+        worker.thoughtProcess.forEach(thought => {
+            const listItem = document.createElement('li');
+            listItem.textContent = thought;
+            list.appendChild(listItem);
+        });
+        thoughtProcessDiv.appendChild(list);
+    }
+
+    // Fix initialization and event listener issues
     document.addEventListener('DOMContentLoaded', () => {
+        // ... (rest of your DOMContentLoaded setup, including model population) ...
+
         // Make sure all button references exist before setting up event listeners
         const copyResultBtn = document.getElementById('copyResultBtn');
         const downloadResultBtn = document.getElementById('downloadResultBtn');
@@ -1128,50 +1089,21 @@ IMPORTANT INSTRUCTIONS:
         if (delayBetweenExchanges) {
             exchangeDelay = parseInt(delayBetweenExchanges.value);
         }
+
+         // Initialize thought process display areas
+        for (const workerKey in workers) {
+            const worker = workers[workerKey];
+            const card = document.querySelector(`.${worker.className}`);
+            if (card) {
+                const thoughtProcessDiv = document.createElement('div');
+                thoughtProcessDiv.className = 'thought-process';
+                card.appendChild(thoughtProcessDiv);
+            }
+        }
     });
 
-    // Fix the error in startCollaboration function by checking for null before setting disabled
-    function startCollaboration() {
-        if (isCollaborationActive) return;
-
-        const initialTopic = initialPrompt.value.trim();
-        if (!initialTopic) {
-            alert('Please enter an initial topic');
-            return;
-        }
-
-        isCollaborationActive = true;
-        startBtn.disabled = true;
-        stopBtn.disabled = false;
-        currentIteration = 0;
-        currentWorkerIndex = 0;
-        maxIterations = parseInt(numExchanges.value);
-        exchangeDelay = parseInt(delayBetweenExchanges.value);
-
-        // Reset result area
-        if (finalResult) finalResult.textContent = '';
-        if (resultStatus) resultStatus.textContent = '(Collaboration in progress...)';
-
-        // Reset buttons - check if elements exist first
-        if (copyResultBtn) copyResultBtn.disabled = true;
-        if (downloadResultBtn) downloadResultBtn.disabled = true;
-
-        // Reset progress
-        if (progressFill) progressFill.style.width = '0%';
-        if (progressText) progressText.textContent = '0%';
-
-        updateStatus("Starting collaboration...");
-
-        // Start with the initial prompt to the first worker
-        continueCollaboration(initialTopic, true).catch(error => {
-            console.error("Error starting collaboration:", error);
-            updateStatus(`Error: ${error.message}`, "error");
-            stopCollaboration();
-        });
-    }
-
-    // Fix the function with the missing catch block
     async function checkApiAvailability() {
+          // ... (same as before) ...
         try {
             const response = await fetch('https://text.pollinations.ai/health', {
                 method: 'GET',
@@ -1184,9 +1116,9 @@ IMPORTANT INSTRUCTIONS:
         }
     }
 
-    // Also need to fix the incomplete function in the script
     function finalizeCollaboration() {
-        // Before completing, let's add the boss's final review
+        // ... (rest of the finalizeCollaboration function, including boss review) ...
+         // Before completing, let's add the boss's final review
         if (isCollaborationActive) {
             processFinalBossReview().then(() => {
                 completeFinalizeCollaboration();
@@ -1201,6 +1133,7 @@ IMPORTANT INSTRUCTIONS:
     }
 
     async function processFinalBossReview() {
+         // ... (same boss review logic as before, but using the updated prompt format) ...
         const worker = workers[finalWorker];
 
         // Add thinking indicator
@@ -1214,12 +1147,11 @@ IMPORTANT INSTRUCTIONS:
                 ErrorAnimations.showWorkingAnimation('boss');
             }
 
-            // Create a comprehensive prompt for the boss that includes all previous conversation
-            // Use ApiConnector's formatting if available for better context
+            // Create a comprehensive prompt for the boss
             let historyText = "";
 
             if (ApiConnector && typeof ApiConnector.formatConversationForApi === 'function') {
-                historyText = ApiConnector.formatConversationForApi(conversationHistory, 12); // Include more context for boss
+                historyText = ApiConnector.formatConversationForApi(conversationHistory, 12); // Include more context
             } else {
                 historyText = formatCollaborationHistory();
             }
@@ -1228,27 +1160,25 @@ IMPORTANT INSTRUCTIONS:
 
             const prompt = `${historyText}
 
-Dabar Tu esi Tauris, biuro šefas ir visų galutinis prižiūrėtojas. Tavo tikslas - peržvelgti visų ankstesnių darbuotojų
-(Jono, Gabijos, Vytauto ir Eglės) darbą ir pateikti GALUTINĘ versiją, kuri apjungia visų geriausias dalis į vieną nuoseklų,
-aukštos kokybės akademinį tekstą.
+Dabar Tu esi Tauris, biuro šefas.
+
+SVARBU:
+- Peržvelk VISŲ darbuotojų (Jono, Gabijos, Vytauto, Eglės) darbą.
+- Pateik GALUTINĘ teksto versiją.  Tai TURI būti aukščiausios kokybės, profesionalus, išbaigtas tekstas, tinkamas publikavimui.
+- Apjunk visų darbuotojų geriausias dalis į vieną nuoseklų dokumentą.
 
 TEMA: "${initialTopic}"
 
-Reikalavimai galutiniam tekstui:
-1. Aiški struktūra ir nuoseklus minčių dėstymas
-2. Visi svarbūs faktai ir šaltiniai iš Gabijos tyrimo
-3. Problemos ištaisytos pagal Vytauto kritiką
-4. Eglės atliktos kalbos ir stiliaus korekcijos
-5. Jono originalios idėjos ir kūrybiškumas
+Reikalavimai:
+1. Aiški struktūra (įvadas, dėstymas, išvados).
+2. Visi SVARBŪS faktai ir šaltiniai iš Gabijos.
+3. Ištaisytos problemos pagal Vytauto kritiką.
+4. Eglės atlikti kalbos pataisymai.
+5. Jono originalios idėjos ir kūrybiškumas (jei tinka).
+6. Visiškai taisyklinga lietuvių kalba.
+7. Tekstas turi atitikti pradinę užduotį (straipsnis, blogo įrašas, etc.).
 
-Galutinio teksto struktūra:
-- Įvadas su temos pristatymu
-- Pagrindinė dalis su faktais, argumentais ir šaltiniais
-- Aiškios išvados
-- Nuorodos į šaltinius (jei yra)
-
-Tai bus GALUTINIS šio darbo rezultatas, todėl jis turi būti išskirtinės, nepriekaištingos kokybės.
-Pradėk nuo frazės: "Ačiū visiems už įdėtą darbą! Štai mano galutinė šio teksto versija:"`;
+Pradėk nuo: "Ačiū visiems už darbą! Štai mano galutinė šio teksto versija:"`;
 
             // Get a response from the boss
             const model = worker.model && typeof worker.model === 'function' ? worker.model() : 'openai';
@@ -1271,8 +1201,11 @@ Pradėk nuo frazės: "Ačiū visiems už įdėtą darbą! Štai mano galutinė �
             // Save as the final result
             latestResult = response;
 
-            // Add the response to the chat log with special boss styling
+            // Add the response to the chat log
             addMessageToChatLog(worker.name, response, worker.className);
+
+            analyzeThoughtProcess(worker, response);  // Analyze boss's thought process
+            displayThoughtProcess(finalWorker);      // Display boss's thought process
             updateStatus(`Šefas Tauris pateikė galutinį rezultatą!`);
 
             // Add boss stamp animation to the result
@@ -1297,6 +1230,7 @@ Pradėk nuo frazės: "Ačiū visiems už įdėtą darbą! Štai mano galutinė �
     }
 
     function completeFinalizeCollaboration() {
+        // ... (same finalization logic as before) ...
         // Extract final result from the last boss contribution or editor if boss failed
         const finalResultText = extractFinalResult();
 
@@ -1319,90 +1253,9 @@ Pradėk nuo frazės: "Ačiū visiems už įdėtą darbą! Štai mano galutinė �
         return;
     }
 
-    // Extract the final result from the last boss's contribution if available
-    function extractFinalResult() {
-        // Try to use the boss's final contribution first
-        const contributions = conversationHistory.filter(msg =>
-            msg.role !== 'System' && msg.content && msg.content.length > 100
-        );
-
-        // Get the boss's contribution if available
-        const bossMsg = contributions
-            .filter(msg => msg.role === 'Boss')
-            .slice(-1)[0];
-
-        if (bossMsg) {
-            // Extract just the document content, removing conversational parts
-            const content = bossMsg.content;
-
-            // Remove common opening phrases
-            let cleanText = content
-                .replace(/^.*?(ačiū visiems už įdėtą darbą|štai mano galutinė|peržiūrėjau visų darbą).*?:/si, '')
-                .trim();
-
-            // Remove common closing phrases
-            cleanText = cleanText
-                .replace(/su pagarba.*?$/si, '')
-                .replace(/tauris.*?$/si, '')
-                .replace(/šefas.*?$/si, '')
-                .trim();
-
-            return cleanText;
-        }
-
-        // Fallback to the original extractFinalResult logic for editor and writer
-        // ...existing extractFinalResult code...
-
-        // Get the last substantive contribution (from Editor if possible)
-        const lastEditorMsg = contributions
-            .filter(msg => msg.role === 'Editor')
-            .slice(-1)[0];
-
-        if (lastEditorMsg) {
-            // Extract just the document content, removing conversational parts
-            const content = lastEditorMsg.content;
-
-            // Remove common opening phrases
-            let cleanText = content
-                .replace(/^.*(štai pataisytas tekstas|štai galutinė versija|štai kaip pataisiau|peržiūrėjau tekstą).*?:/si, '')
-                .replace(/^.*?(štai rezultatas|pataisiau tekstą).*?:/si, '')
-                .trim();
-
-            // Remove common closing phrases
-            cleanText = cleanText
-                .replace(/tikiuosi, kad šis tekstas.*?$/si, '')
-                .replace(/linkiu sėkmės.*?$/si, '')
-                .replace(/perduodu šį tekstą.*?$/si, '')
-                .replace(/ačiū už galimybę.*?$/si, '')
-                .replace(/esu pasiruošusi atsakyti.*?$/si, '')
-                .trim();
-
-            return cleanText;
-        }
-
-        // Fallback to writer's text if neither boss nor editor is available
-        const lastWriterMsg = contributions
-            .filter(msg => msg.role === 'Writer')
-            .slice(-1)[0];
-
-        if (lastWriterMsg) {
-            // Extract just the document content from writer's text
-            const content = lastWriterMsg.content;
-
-            return content
-                .replace(/^.*?(štai ką parašiau|štai mano tekstas|parašiau tokį tekstą).*?:/si, '')
-                .replace(/^.*?(štai mano juodraštis|štai pradinis variantas).*?:/si, '')
-                .replace(/gabija[a-zA-ZĄČĘĖĮŠŲŪąčęėįšųū\s,]*$/si, '')
-                .replace(/perduodu.*?$/si, '')
-                .trim();
-        }
-
-        // If no identifiable messages found, fall back to the original method
-        return cleanUpFinalResult(conversationHistory[conversationHistory.length - 1]?.content || "");
-    }
-
-    // Override addMessageToChatLog to use Lithuanian role names
+   // Override addMessageToChatLog to use Lithuanian role names
     function addMessageToChatLog(role, message, className = '') {
+         // ... (same Lithuanian role name translation as before) ...
         const chatLog = document.getElementById('chatLog');
         if (!chatLog) return;
 
@@ -1465,6 +1318,7 @@ Pradėk nuo frazės: "Ačiū visiems už įdėtą darbą! Štai mano galutinė �
 
     // Override worker titles with Lithuanian names
     document.addEventListener('DOMContentLoaded', function () {
+        // ... (same Lithuanian name override as before) ...
         // Update worker role titles if not already in Lithuanian
         const workerTitles = {
             'writer': 'Rašytojas Jonas',
@@ -1491,8 +1345,9 @@ Pradėk nuo frazės: "Ačiū visiems už įdėtą darbą! Štai mano galutinė �
     window.updateStatus = updateStatus;
     window.showCompletedStamp = showCompletedStamp;
 
-    // Add model blacklist monitoring 
+    // Add model blacklist monitoring
     document.addEventListener('model-blacklisted', function (event) {
+         // ... (same model blacklist handling as before) ...
         const model = event.detail.model;
         console.warn(`Model ${model} has been blacklisted by the system`);
 
@@ -1512,6 +1367,7 @@ Pradėk nuo frazės: "Ačiū visiems už įdėtą darbą! Štai mano galutinė �
     });
       // Utility function to update worker model selection in UI and worker object
     function updateWorkerModel(workerKey, newModel) {
+        // ... (same model update logic as before) ...
         const worker = workers[workerKey];
         if (!worker) return;
 
@@ -1542,3 +1398,5 @@ Pradėk nuo frazės: "Ačiū visiems už įdėtą darbą! Štai mano galutinė �
     function showCompletedStamp() { /* Implementation */ }
 
 });
+
+         
