@@ -206,7 +206,6 @@ class DocumentFormatter {
         
         const signatureTitle = document.createElement('div');
         signatureTitle.className = 'signature-title';
-        signatureTitle.textContent = 'Vyr. AI Vadovas';
         
         const signatureDate = document.createElement('div');
         signatureDate.className = 'signature-date';

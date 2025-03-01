@@ -1453,7 +1453,147 @@ input:checked + .slider:before {
     background-color: rgba(158, 158, 158, 0.05);
 }
 
-[data-theme="dark"] .boss-seal-inner {
-    border-color: rgba(158, 158, 158, 0.7);
-    color: rgba(158, 158, 158, 0.7);
+/* Feedback System Styles */
+.feedback-form {
+    background-color: var(--bg-card);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 2px 10px var(--shadow);
+    border-left: 5px solid var(--lt-yellow);
+}
+
+.feedback-form h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+}
+
+.feedback-form h3::before {
+    content: "✏️";
+    margin-right: 8px;
+}
+
+#documentFeedback {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 15px;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: 'Roboto', sans-serif;
+}
+
+.feedback-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+#assignWorkerSelect {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    flex-grow: 1;
+    min-width: 150px;
+    font-family: 'Roboto', sans-serif;
+}
+
+.revision-status {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--text-light);
+    margin-top: 10px;
+}
+
+/* Worker card revision styles */
+.role-card.revising {
+    box-shadow: 0 0 15px rgba(255, 218, 0, 0.5);
+    animation: revising-pulse 2s infinite;
+}
+
+@keyframes revising-pulse {
+    0% { box-shadow: 0 0 15px rgba(255, 218, 0, 0.3); }
+    50% { box-shadow: 0 0 20px rgba(255, 218, 0, 0.8); }
+    100% { box-shadow: 0 0 15px rgba(255, 218, 0, 0.3); }
+}
+
+.revising-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+[data-theme="dark"] .revising-indicator {
+    background-color: rgba(42, 42, 42, 0.85);
+}
+
+.revising-text {
+    font-weight: bold;
+    color: var(--lt-yellow);
+    animation: revising-text 2s infinite;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes revising-text {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* Revision history styles */
+.revision-history {
+    margin-top: 20px;
+    border-top: 1px solid var(--border);
+    padding-top: 15px;
+}
+
+.revision-history h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.revision-entry {
+    padding: 10px;
+    background-color: var(--bg-main);
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.revision-entry-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 12px;
+    color: var(--text-light);
+}
+
+.revision-entry-content {
+    font-style: italic;
+}
+
+/* Message styling for revisions */
+.message.revision-message {
+    background-color: rgba(255, 218, 0, 0.1);
+    border-left: 4px solid var(--lt-yellow);
+}
+
+[data-theme="dark"] .message.revision-message {
+    background-color: rgba(255, 218, 0, 0.05);
 }

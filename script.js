@@ -186,7 +186,9 @@ DABAR: Gali redaguoti ir tobulinti įvairius tekstus – straipsnius, blogo įra
         },
         boss: {
             name: "Boss",
-            systemPrompt: `Tu esi Tauris, įmonės direktorius ir galutinis sprendimų priėmėjas, pasižymintis strateginiu mąstymu ir lyderystės savybėmis. Tavo užduotis – peržiūrėti visų darbuotojų (Jono, Gabijos, Vytauto ir Eglės) darbą ir sukurti galutinį tekstą, kuris atitiktų aukščiausius standartus.
+            systemPrompt: `Tu esi Tauris, įmonės direktorius ir galutinis sprendimų priėmėjas, pasižymintis strateginiu mąstymu ir lyderystės savybėmis. 
+    SVARBU: Kalbi ir rašai autoritetinga, aiškia lietuvių kalba, derindamas profesionalumą su vadovavimo įgūdžiais.
+
     Kaip biuro vadovas:
     - PRIVALAI atidžiai perskaityti ir suprasti VISĄ darbuotojų susirašinėjimo istoriją prieš pateikiant galutinį sprendimą
     - PRIVALAI atsižvelgti į VISUS darbuotojų įnašus, pastabas, kritiką ir pasiūlymus
@@ -228,7 +230,7 @@ DABAR: Gali redaguoti ir tobulinti įvairius tekstus – straipsnius, blogo įra
   
     Tavo rezultatas turi būti profesionalus, išbaigtas akademinis tekstas, tinkamas publikavimui, kuris apjungia visų darbuotojų geriausias įžvalgas, įskaitant Jono rašymo toną ir kitų pastabas, ir atitinka dokumento struktūros reikalavimus.
 
-    DABAR: Peržiūrėk VISĄ susirašinėjimo istoriją ir pateik galutinę tekstų versiją BET PATEIK TIK PATĮ IŠSAMIAI PARAŠYTA TEKSTĄ, BE JOKIŲ KOMENTARŲ AR ANALIZĖS NEPAMIRŠK ATSIŽVELGTI Į Jono, Gabijos, Vytauto ir Eglės PASTABAS.`,
+    DABAR: Peržiūrėk VISĄ susirašinėjimo istoriją ir pateik galutinę tekstų versiją BET PATEIK TIK PATĮ TEKSTĄ, BE JOKIŲ KOMENTARŲ AR ANALIZĖS NEPAMIRŠK ATSIŽVELGTI Į Jono, Gabijos, Vytauto ir Eglės PASTABAS.`,
             className: "boss",
             model: () => bossModel ? bossModel.value : (openaiModel ? openaiModel.value : 'openai')
         }
@@ -851,8 +853,8 @@ IMPORTANT INSTRUCTIONS:
 
             // Trim prompt if it's too long
             let trimmedPrompt = prompt;
-            if (prompt.length > 30000) {
-                console.warn("Prompt exceeds recommended length, trimming to 30000 characters");
+            if (prompt.length > 12000) {
+                console.warn("Prompt exceeds recommended length, trimming to 12000 characters");
                 trimmedPrompt = prompt.substring(0, 11900) + "... [text trimmed for length]";
             }
 
@@ -1371,9 +1373,7 @@ Galutinio teksto struktūra:
 LABAI SVARBU: Tavo atsakyme pateik TIK galutinį tekstą, nepridedant jokios analizės ar komentarų apie tekstą. NEPRIDĖK JOKIŲ PUNKTŲ APIE TEKSTO KOKYBĘ AR STRUKTŪRĄ. Nepridėk "Galutinės analizės" sekcijos - pateik tik patį išbaigtą tekstą.
 
 Tai bus GALUTINIS šio darbo rezultatas, todėl jis turi būti išskirtinės, nepriekaištingos kokybės.
-Pradėk nuo frazės: "Štai galutinis šio teksto variantas:"
-
-[Prašome pateikti IŠSAMŲ analizės tekstą, kuriame įtrauktos visos komandos įžvalgos bei išsamiai aptarta visa konteksto informacija.]`;
+Pradėk nuo frazės: "Štai galutinis šio teksto variantas:"`;
 
         // Get a response from the boss
         const model = worker.model && typeof worker.model === 'function' ? worker.model() : 'openai';
