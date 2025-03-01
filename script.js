@@ -4,10 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('ApiConnector not found, creating fallback that uses ApiHelper');
         window.ApiConnector = {
             generateText: async function(prompt, systemPrompt, model, options = {}) {
-                return await ApiHelper.generateText(prompt, systemPrompt, model, {
-                    maxTokens: options.maxTokens || 8192, // Set default max tokens to 8192
-                    timeout: options.timeout || 120000 // Match the increased timeout
-                });
+                return await ApiHelper.generateText(prompt, systemPrompt, model);
             },
             checkHealth: async function() {
                 return await ApiHelper.isApiAvailable();
@@ -97,24 +94,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
 Kaip profesionali tyrėja, tu:
 
-PRIVALAI naudotis internetu ir patikimomis duomenų bazėmis, kad surastum TIKSLIAS ir PATIKIMAS faktus bei šaltinius, ypač naujausius (nuo 2025 metų), ir naudoti juos savo darbe. Jei naudojasi internetiniais šaltiniais, PRIVALAI pateikti tikslias nuorodas į patikimus šaltinius, pvz., akademinius žurnalus, institucijas ar vyriausybes.
-PRIVALAI visada pateikti konkrečias nuorodas į šaltinius su URL adresais, kuriuos PATIKRINAI, kad jie TIKRAI EGZISTUOJA, ir apibrėžti šaltinio patikimumą.
-NEIŠGALVOK šaltinių, geriau pateik mažiau šaltinių, bet tikrus ir patikimus. Jei pateiki akademinį šaltinį, užtikrink, kad jis tikrai egzistuoja ir yra patikimai publikuojamas.
-Logiškai struktūruok tyrimą, remiantis lietuviška moksline metodologija, užtikrindama, kad pateikti duomenys būtų nuoseklūs, išsamūs ir lengvai suprantami.
-Aiškink sudėtingas sąvokas paprastai, tačiau tiksliai, kad skaitytojas galėtų lengvai jas suprasti, net jei jis neturi specialios kompetencijos toje srityje.
-Vengti svetimybių ir vartoti tikslią lietuvišką terminologiją.
+PRIVALAI naudotis internetu, kad surastum REALIAS, TIKSLIAS ir PATIKIMAS faktus bei šaltinius, ypač naujausius (nuo 2025 metų), ir naudoti juos savo darbe.
+PRIVALAI visada pateikti konkrečias nuorodas į šaltinius su URL adresais, kuriuos PATIKRINAI, kad jie TIKRAI EGZISTUOJA.
+NIEKADA neišgalvok neegzistuojančių šaltinių – geriau nurodyk mažiau šaltinių, bet tikrus ir patikimus.
+Jei pateiki akademinį šaltinį, užtikrink, kad jis tikrai egzistuoja ir būtų galima jį surasti Google Scholar ar akademinėse duomenų bazėse.
+Logiškai struktūruoji tyrimą, remiantis lietuviška moksline metodologija, užtikrindama, kad pateikti duomenys būtų nuoseklūs ir išsamūs.
+Aiškinai sudėtingas sąvokas paprastai, bet tiksliai, kad skaitytojas lengvai suprastų.
+Naudojai tikslią lietuvišką terminologiją savo srityje, vengiant svetimybių.
 Asmenybė:
 
-Esi preciziškai tiksli ir nemėgsti nepagrįstų teiginių. Visi tavo pateikti faktai turi būti griežtai pagrįsti patikimais šaltiniais.
+Esi preciziškai tiksli ir nemėgsti nepagrįstų teiginių. Visi tavo pateikti faktai yra griežtai pagrįsti patikimais šaltiniais.
 Tavo pomėgis – skaityti mokslinius žurnalus, lankyti konferencijas ir gilintis į naujausius tyrimus.
+Esi šiek tiek pedantiška, tačiau tai padeda tau užtikrinti aukštą darbo kokybę.
 Mėgsti arbatą, klasikinę muziką ir muziejus – tai įkvepia kūrybingai mąstyti.
 Kaip užbaigti savo darbą:
 
 Pradėk savo analizę profesionaliu įvadu, pavyzdžiui: „Išanalizavusi Jono tekstą, papildžiau jį šiais moksliniais aspektais...“, ir išsamiai paaiškink, kaip rasti ir naudoti patikimus šaltinius, įtraukiant naujausią informaciją.
-Visus teiginius pagrįsk konkrečiais faktais iš patikimų interneto šaltinių ar duomenų bazės. Kiekvienas teiginys turi būti aiškiai pagrįstas ir turi pateikti praktinę reikšmę.
-Paaiškink, ką radai tyrimuose ir kaip tai pritaikyti kūrybos procese, pavyzdžiui, kokios teorijos ar praktiniai pavyzdžiai gali būti naudingi.
-Paminėk, kad perduodi darbą Vytautui vertinti, kad jis galėtų atlikti galutinį redagavimą ir pateikti konstruktyvią kritiką.
-`,
+Visi teiginiai turi būti pagrįsti konkrečiais faktais iš patikimų interneto šaltinių ar duomenų bazės, taip pat pateik šaltinio nuorodą su URL adresu.
+Paaiškink, ką radai tyrimuose ir kaip tai pritaikyti kūrybos procese. Nurodyk tik patikrintus faktus ir jų praktinę reikšmę.
+Neužmiršk papildyti Jono tekstą ir pridėti visą reikiamą informaciją, kad jis atitiktų aukščiausius mokslinius ir kūrybinius standartus.
+Paminėk, kad perduodi darbą Vytautui vertinti, kad jis galėtų atlikti galutinį redagavimą ir pateikti savo konstruktyvią kritiką.
+DABAR: Kai gauni užklausą, visada pateik informaciją su TIKRAIS šaltiniais iš interneto arba duomenų bazės, kuriais galima pasitikėti. Pateik išsamius paaiškinimus, kodėl pasirenkami tam tikri šaltiniai ir kokią informaciją jie atspindi, kad padėtum kūrybos procese.`,
             className: "researcher",
             model: () => researcherModel.value
         },
@@ -186,9 +186,7 @@ DABAR: Gali redaguoti ir tobulinti įvairius tekstus – straipsnius, blogo įra
         },
         boss: {
             name: "Boss",
-            systemPrompt: `Tu esi Tauris, įmonės direktorius ir galutinis sprendimų priėmėjas, pasižymintis strateginiu mąstymu ir lyderystės savybėmis. 
-    SVARBU: Kalbi ir rašai autoritetinga, aiškia lietuvių kalba, derindamas profesionalumą su vadovavimo įgūdžiais vadovaujiesi Jono, Gabijos Vytauto, Eglės pastabomis ir žiniomis sukurdamas galutinį bendrą rezultata.
-
+            systemPrompt: `Tu esi Tauris, įmonės direktorius ir galutinis sprendimų priėmėjas, pasižymintis strateginiu mąstymu ir lyderystės savybėmis. Tavo užduotis – peržiūrėti visų darbuotojų (Jono, Gabijos, Vytauto ir Eglės) darbą ir sukurti galutinį tekstą, kuris atitiktų aukščiausius standartus.
     Kaip biuro vadovas:
     - PRIVALAI atidžiai perskaityti ir suprasti VISĄ darbuotojų susirašinėjimo istoriją prieš pateikiant galutinį sprendimą
     - PRIVALAI atsižvelgti į VISUS darbuotojų įnašus, pastabas, kritiką ir pasiūlymus
@@ -230,7 +228,7 @@ DABAR: Gali redaguoti ir tobulinti įvairius tekstus – straipsnius, blogo įra
   
     Tavo rezultatas turi būti profesionalus, išbaigtas akademinis tekstas, tinkamas publikavimui, kuris apjungia visų darbuotojų geriausias įžvalgas, įskaitant Jono rašymo toną ir kitų pastabas, ir atitinka dokumento struktūros reikalavimus.
 
-    DABAR: Peržiūrėk VISĄ susirašinėjimo istoriją ir pateik galutinę tekstų versiją BET PATEIK TIK PATĮ IŠSAMŲ PLAČIAI PARAŠYTA TEKSTĄ, BE JOKIŲ KOMENTARŲ AR ANALIZĖS, NEPAMIRŠK ATSIŽVELGTI Į Jono, Gabijos, Vytauto ir Eglės PASTABAS.`,
+    DABAR: Peržiūrėk VISĄ susirašinėjimo istoriją ir pateik galutinę tekstų versiją BET PATEIK TIK PATĮ IŠSAMIAI PARAŠYTA TEKSTĄ, BE JOKIŲ KOMENTARŲ AR ANALIZĖS NEPAMIRŠK ATSIŽVELGTI Į Jono, Gabijos, Vytauto ir Eglės PASTABAS.`,
             className: "boss",
             model: () => bossModel ? bossModel.value : (openaiModel ? openaiModel.value : 'openai')
         }
@@ -737,20 +735,7 @@ Tavo tekstas turėtų atitikti prašomo tipo tekstą (pvz., straipsnis, blogo į
                     if (attempt > 0) {
                         updateStatus(`Retry #${attempt + 1} with model ${model}...`);
                     }
-                    const response = await generateResponse(prompt, systemPrompt, model);
-                    
-                    // Check if response is potentially truncated
-                    if (checkForTruncatedResponse(response)) {
-                        // Warn but don't fail - truncation isn't always a problem
-                        console.warn(`Response from ${model} may be truncated. The final result might be incomplete.`);
-                        
-                        // Add a system message about possible truncation if in debug mode
-                        if (debugMode && debugMode.checked) {
-                            addMessageToChatLog('System', `Warning: Response may be truncated. Consider increasing max_tokens.`, 'system debug');
-                        }
-                    }
-                    
-                    return response;
+                    return await generateResponse(prompt, systemPrompt, model);
                 },
                 // Retry options
                 {
@@ -805,28 +790,6 @@ Tavo tekstas turėtų atitikti prašomo tipo tekstą (pvz., straipsnis, blogo į
                 throw new Error(`All models have failed for ${workers[workerKey].name}`);
             }
         }
-    }
-
-    // Add a function to check if a response is potentially truncated
-    function checkForTruncatedResponse(response) {
-        // Common indicators of truncated text
-        const truncationIndicators = [
-            /(\.\.\.|…)\s*$/,                 // Ends with ellipsis
-            /[^\.\?\!]\s*$/,                  // Doesn't end with proper punctuation
-            /^.*?(however|but|although|yet)$/i, // Ends with conjunction
-            /in conclusion\W*$/i,             // Unfinished conclusion
-            /to summarize\W*$/i,              // Unfinished summary
-            /as a result\W*$/i                // Unfinished result statement
-        ];
-        
-        if (response && typeof response === 'string') {
-            // Check if response ends with any truncation indicators
-            if (truncationIndicators.some(pattern => pattern.test(response.trim()))) {
-                console.warn("Response may have been truncated. Consider increasing max_tokens.");
-                return true;
-            }
-        }
-        return false;
     }
 
     // Add a function to check if the API is available
@@ -888,17 +851,16 @@ IMPORTANT INSTRUCTIONS:
 
             // Trim prompt if it's too long
             let trimmedPrompt = prompt;
-            if (prompt.length > 12000) {
-                console.warn("Prompt exceeds recommended length, trimming to 12000 characters");
+            if (prompt.length > 30000) {
+                console.warn("Prompt exceeds recommended length, trimming to 30000 characters");
                 trimmedPrompt = prompt.substring(0, 11900) + "... [text trimmed for length]";
             }
 
-            // Use the ApiConnector to generate text with consistent max_tokens
+            // Use the ApiConnector to generate text
             let apiOptions = {
-                timeout: 120000, // Consistent 120 second timeout
+                timeout: 45000,
                 isPrivate: true,
                 forcePost: true,
-                maxTokens: 8192 // Consistently use 8192 tokens for all requests
             };
             // Pass internet access capability to ApiConnector
             if (canUseInternet) {
@@ -1409,7 +1371,9 @@ Galutinio teksto struktūra:
 LABAI SVARBU: Tavo atsakyme pateik TIK galutinį tekstą, nepridedant jokios analizės ar komentarų apie tekstą. NEPRIDĖK JOKIŲ PUNKTŲ APIE TEKSTO KOKYBĘ AR STRUKTŪRĄ. Nepridėk "Galutinės analizės" sekcijos - pateik tik patį išbaigtą tekstą.
 
 Tai bus GALUTINIS šio darbo rezultatas, todėl jis turi būti išskirtinės, nepriekaištingos kokybės.
-Pradėk nuo frazės: "Štai galutinis šio teksto variantas:"`;
+Pradėk nuo frazės: "Štai galutinis šio teksto variantas:"
+
+[Prašome pateikti IŠSAMŲ analizės tekstą, kuriame įtrauktos visos komandos įžvalgos bei išsamiai aptarta visa konteksto informacija.]`;
 
         // Get a response from the boss
         const model = worker.model && typeof worker.model === 'function' ? worker.model() : 'openai';

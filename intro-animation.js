@@ -135,11 +135,11 @@ class TaurisIntro {
      */
     init() {
         console.log("TaurisIntro init called. hasSeenIntro:", this.hasSeenIntro);
-        // Force show intro for testing
-        this.hasSeenIntro = false;
-        
+        // Only show intro if not already accepted
         if (!this.hasSeenIntro) {
             setTimeout(() => this.showIntro(), 1000);
+        } else {
+            console.log("Introduction already accepted. Skipping intro animation.");
         }
     }
 
@@ -170,7 +170,7 @@ class TaurisIntro {
                             <path fill="none" stroke="#eee" stroke-width="2" d="M40,45c0,0,10,8,20,0"/>
                         </g>
                     </svg>
-                    <span class="tauris-tie">👔</span>
+                    <span class="tauris-tie">👇</span>
                 </div>
                 <div class="tauris-speech-bubble">
                     <p class="tauris-message"></p>
@@ -291,40 +291,40 @@ class TaurisIntro {
     /**
      * Improved typing animation with better encoding support and cancellation
      */
-    typeMessageWithEncodingFix(message, element, index = 0) {
+    typeMessageWithEncodingFix(message, element, index = 0, wordBuffer = "") {
         if (index < message.length) {
             const char = message.charAt(index);
             
-            try {
-                // Create better structure for special characters
-                if (this.isLithuanianSpecial(char) || this.isEmoji(char)) {
-                    // Use specialized handling for special characters
+            // If the character is neither a space nor a newline, add to buffer.
+            if (char !== " " && char !== "\n") {
+                wordBuffer += char;
+            } else {
+                // Append the buffered word as a single span with nowrap.
+                if (wordBuffer.length > 0) {
                     const span = document.createElement('span');
-                    span.className = 'tauris-special-char';
-                    span.textContent = char;
-                    span.style.display = 'inline-block'; // Prevent line breaking between characters
+                    span.className = 'tauris-word';
+                    span.style.whiteSpace = 'nowrap';
+                    span.textContent = wordBuffer;
                     element.appendChild(span);
-                } else {
-                    // Use text nodes for regular characters for better performance
-                    if (element.lastChild && element.lastChild.nodeType === Node.TEXT_NODE) {
-                        element.lastChild.nodeValue += char;
-                    } else {
-                        element.appendChild(document.createTextNode(char));
-                    }
+                    wordBuffer = "";
                 }
-                
-                // Schedule next character with stored reference for potential cancellation
-                const typingSpeed = this.isEmoji(char) ? 40 : 15;
-                this.currentTypingTimeout = setTimeout(() => {
-                    this.typeMessageWithEncodingFix(message, element, index + 1);
-                }, typingSpeed);
-            } catch (e) {
-                console.error("Error during typing animation:", e);
-                // In case of error, show full text immediately
-                element.textContent = message;
+                // Append the whitespace character (preserving newlines if needed)
+                element.appendChild(document.createTextNode(char));
             }
+            
+            const typingSpeed = this.isEmoji(char) ? 40 : 15;
+            this.currentTypingTimeout = setTimeout(() => {
+                this.typeMessageWithEncodingFix(message, element, index + 1, wordBuffer);
+            }, typingSpeed);
         } else {
-            // Animation complete, clear the timeout reference
+            // End of message: flush any remaining buffered word.
+            if (wordBuffer.length > 0) {
+                const span = document.createElement('span');
+                span.className = 'tauris-word';
+                span.style.whiteSpace = 'nowrap';
+                span.textContent = wordBuffer;
+                element.appendChild(span);
+            }
             this.currentTypingTimeout = null;
         }
     }
