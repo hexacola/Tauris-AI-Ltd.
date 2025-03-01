@@ -1038,3 +1038,70 @@ document.addEventListener('DOMContentLoaded', () => {
     // Setup a periodic check for untranslated names (runs every 5 seconds)
     setInterval(translateWorkerNames, 5000);
 });
+
+// Lithuanian extras - additional functionality for Lithuanian-themed elements
+
+// Water cooler conversation manager
+const waterCoolerConversations = {
+    initialize() {
+        // Collection of water cooler phrases - one phrase per bubble
+        this.phrases = [
+            ["Girdėjai naujieną?", "AI užims mūsų darbus!"],
+            ["Ar ragavai cepelinus?", "Neįtikėtinai skanūs!"],
+            ["Kaip savaitgalis?", "Puikiai, žvejojau!"],
+            ["Matei rungtynes?", "Žalgiris laimėjo!"],
+            ["Kiek lauke?", "Vėl lyja..."],
+            ["Ką veiksi po darbo?", "Eisiu į Akropolį"],
+            ["Gėrei kavos?", "Jau tris puodelius!"],
+            ["Planai vasarai?", "Važiuosiu į Palangą"],
+            ["Naujas projektas?", "Bus daug darbo..."],
+            ["Pietavai?", "Einu į Maximą"]
+        ];
+        
+        this.setupBubbleRefresh();
+    },
+    
+    // Refresh water cooler conversations periodically
+    setupBubbleRefresh() {
+        // Initial setup
+        this.updateBubbles();
+        
+        // Refresh conversations every 30-45 seconds
+        setInterval(() => this.updateBubbles(), 30000 + Math.random() * 15000);
+    },
+    
+    // Update bubble content with random phrases
+    updateBubbles() {
+        const bubbles = document.querySelectorAll('.water-bubble');
+        if (bubbles.length >= 2) {
+            const randomIndex = Math.floor(Math.random() * this.phrases.length);
+            const conversation = this.phrases[randomIndex];
+            
+            // Clear existing animations
+            bubbles.forEach(bubble => {
+                bubble.style.animation = 'none';
+                bubble.offsetHeight; // Trigger reflow
+            });
+            
+            // Update bubble text and restart animations with proper timing
+            bubbles[0].textContent = conversation[0];
+            bubbles[1].textContent = conversation[1];
+            
+            // Restart animations with staggered timing
+            setTimeout(() => {
+                bubbles[0].style.animation = 'bubble-appear 10s 1';
+                
+                // Second bubble appears slightly after first
+                setTimeout(() => {
+                    bubbles[1].style.animation = 'bubble-appear 10s 1';
+                }, 2000);
+            }, 100);
+        }
+    }
+};
+
+// Initialize water cooler conversations
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize water cooler conversations
+    waterCoolerConversations.initialize();
+});
