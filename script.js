@@ -4,7 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('ApiConnector not found, creating fallback that uses ApiHelper');
         window.ApiConnector = {
             generateText: async function(prompt, systemPrompt, model, options = {}) {
-                return await ApiHelper.generateText(prompt, systemPrompt, model);
+                return await ApiHelper.generateText(prompt, systemPrompt, model, {
+                    maxTokens: options.maxTokens || 8192, // Set default max tokens to 8192
+                    timeout: options.timeout || 120000 // Match the increased timeout
+                });
             },
             checkHealth: async function() {
                 return await ApiHelper.isApiAvailable();
@@ -737,7 +740,20 @@ Tavo tekstas turėtų atitikti prašomo tipo tekstą (pvz., straipsnis, blogo į
                     if (attempt > 0) {
                         updateStatus(`Retry #${attempt + 1} with model ${model}...`);
                     }
-                    return await generateResponse(prompt, systemPrompt, model);
+                    const response = await generateResponse(prompt, systemPrompt, model);
+                    
+                    // Check if response is potentially truncated
+                    if (checkForTruncatedResponse(response)) {
+                        // Warn but don't fail - truncation isn't always a problem
+                        console.warn(`Response from ${model} may be truncated. The final result might be incomplete.`);
+                        
+                        // Add a system message about possible truncation if in debug mode
+                        if (debugMode && debugMode.checked) {
+                            addMessageToChatLog('System', `Warning: Response may be truncated. Consider increasing max_tokens.`, 'system debug');
+                        }
+                    }
+                    
+                    return response;
                 },
                 // Retry options
                 {
@@ -792,6 +808,28 @@ Tavo tekstas turėtų atitikti prašomo tipo tekstą (pvz., straipsnis, blogo į
                 throw new Error(`All models have failed for ${workers[workerKey].name}`);
             }
         }
+    }
+
+    // Add a function to check if a response is potentially truncated
+    function checkForTruncatedResponse(response) {
+        // Common indicators of truncated text
+        const truncationIndicators = [
+            /(\.\.\.|…)\s*$/,                 // Ends with ellipsis
+            /[^\.\?\!]\s*$/,                  // Doesn't end with proper punctuation
+            /^.*?(however|but|although|yet)$/i, // Ends with conjunction
+            /in conclusion\W*$/i,             // Unfinished conclusion
+            /to summarize\W*$/i,              // Unfinished summary
+            /as a result\W*$/i                // Unfinished result statement
+        ];
+        
+        if (response && typeof response === 'string') {
+            // Check if response ends with any truncation indicators
+            if (truncationIndicators.some(pattern => pattern.test(response.trim()))) {
+                console.warn("Response may have been truncated. Consider increasing max_tokens.");
+                return true;
+            }
+        }
+        return false;
     }
 
     // Add a function to check if the API is available
@@ -858,11 +896,12 @@ IMPORTANT INSTRUCTIONS:
                 trimmedPrompt = prompt.substring(0, 11900) + "... [text trimmed for length]";
             }
 
-            // Use the ApiConnector to generate text
+            // Use the ApiConnector to generate text with consistent max_tokens
             let apiOptions = {
-                timeout: 45000,
+                timeout: 120000, // Consistent 120 second timeout
                 isPrivate: true,
                 forcePost: true,
+                maxTokens: 8192 // Consistently use 8192 tokens for all requests
             };
             // Pass internet access capability to ApiConnector
             if (canUseInternet) {

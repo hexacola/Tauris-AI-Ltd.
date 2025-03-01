@@ -9,17 +9,25 @@ class ApiHelper {
      * @param {string} model - Model name
      * @returns {Promise<string>} - Generated text
      */
-    static async generateText(prompt, systemPrompt, model = 'openai') {
+    static async generateText(prompt, systemPrompt, model = 'openai', options = {}) {
         console.warn('Using ApiHelper fallback instead of ApiConnector - functionality may be limited');
         
+        const maxTokens = options.maxTokens || 8192; // Match the increased token limit
+        
         try {
-            const response = await fetch('https://text.pollinations.ai/' + encodeURIComponent(prompt), {
+            const encodedPrompt = encodeURIComponent(prompt);
+            const encodedSystem = encodeURIComponent(systemPrompt);
+            
+            // Include max_tokens parameter in URL
+            const url = `https://text.pollinations.ai/${encodedPrompt}?model=${model}&system=${encodedSystem}&max_tokens=${maxTokens}`;
+            
+            const response = await fetch(url, {
                 method: 'GET',
                 headers: {
                     'Accept': 'text/plain',
                     'Cache-Control': 'no-cache'
                 },
-                signal: AbortSignal.timeout(30000)
+                signal: AbortSignal.timeout(120000) // Increased to 120 seconds to match ApiConnector
             });
             
             if (!response.ok) {
@@ -55,11 +63,12 @@ class ApiHelper {
      */
     static async getAvailableModels() {
         return [
-            { name: 'openai', type: 'chat', description: 'OpenAI GPT-4o-mini' },
-            { name: 'openai-large', type: 'chat', description: 'OpenAI GPT-4o' },
-            { name: 'mistral', type: 'chat', description: 'Mistral Large' },
-            { name: 'llama', type: 'chat', description: 'Llama 3' },
-            { name: 'deepseek', type: 'chat', description: 'DeepSeek Coder' }
+            { name: 'openai-large', type: 'chat', description: 'OpenAI GPT-4o', vision: true },
+            { name: 'openai-reasoning', type: 'chat', description: 'OpenAI o1-mini', reasoning: true },
+            { name: 'gemini', type: 'chat', description: 'Gemini 2.0 Flash', provider: 'google' },
+            { name: 'gemini-thinking', type: 'chat', description: 'Gemini 2.0 Flash Thinking', provider: 'google' },
+            { name: 'claude-hybridspace', type: 'chat', description: 'Claude Hybridspace' },
+            { name: 'searchgpt', type: 'chat', description: 'SearchGPT with realtime news and web search', internet: true }
         ];
     }
 }

@@ -14,9 +14,10 @@ class ApiConnector {
         const {
             seed = Math.floor(Math.random() * 10000),
             jsonMode = false,
-            timeout = 60000, // Increased timeout to 60 seconds
+            timeout = 120000, // Increased timeout to 120 seconds for longer responses
             isPrivate = true,
-            forcePost = false
+            forcePost = false,
+            maxTokens = 8192 // Default to 8192 tokens (about 6000 words) for longer responses
         } = options;
         
         // Check if model is known to fail with 500 errors
@@ -33,7 +34,7 @@ class ApiConnector {
         
         // Track generation time and update UI
         const startTime = Date.now();
-        this.showFetchingStatus(true, `Requesting ${model}...`);
+        this.showFetchingStatus(true, `Requesting ${model} (extended response)...`);
         
         // Check if prompt is too long (> 8000 chars) - URLs have length limits
         const promptLength = prompt.length + systemPrompt.length;
@@ -41,7 +42,7 @@ class ApiConnector {
         
         try {
             // Always use POST method for consistency with API docs
-            console.log(`Generating with ${model} using POST method`);
+            console.log(`Generating with ${model} using POST method (max tokens: ${maxTokens})`);
             
             // Create proper message structure according to API documentation
             const postData = {
@@ -51,7 +52,8 @@ class ApiConnector {
                 ],
                 model: model,
                 seed: seed,
-                private: isPrivate
+                private: isPrivate,
+                max_tokens: maxTokens // Add max_tokens parameter for longer responses
             };
             
             if (jsonMode) {
@@ -105,9 +107,10 @@ class ApiConnector {
                         
                         // Structure matches the API docs (choices[0].message.content)
                         if (data.choices && data.choices[0] && data.choices[0].message) {
-                            console.log(`Generated text with ${model} in ${duration}s`);
+                            console.log(`Generated text with ${model} in ${duration}s (${data.choices[0].message.content.length} chars)`);
                             return data.choices[0].message.content;
                         } else if (data.text) {
+                            console.log(`Generated text with ${model} in ${duration}s (${data.text.length} chars)`);
                             return data.text;
                         } else {
                             throw new Error("Unexpected JSON response structure");
@@ -122,7 +125,7 @@ class ApiConnector {
                     }
                 } else {
                     // Plain text response
-                    console.log(`Got text response from ${model} in ${duration}s`);
+                    console.log(`Got text response from ${model} in ${duration}s (${responseText.length} chars)`);
                     return responseText;
                 }
                 
@@ -157,7 +160,7 @@ class ApiConnector {
                     const encodedSystem = encodeURIComponent(systemPrompt);
                     
                     // Check URL length for GET request
-                    const estimatedUrlLength = `https://text.pollinations.ai/${encodedPrompt}?model=${model}&system=${encodedSystem}&seed=${seed}&private=${isPrivate}`.length;
+                    const estimatedUrlLength = `https://text.pollinations.ai/${encodedPrompt}?model=${model}&system=${encodedSystem}&seed=${seed}&private=${isPrivate}&max_tokens=${maxTokens}`.length;
                     
                     if (estimatedUrlLength > 8000) {
                         console.warn(`URL too long (${estimatedUrlLength} chars) for GET request. Truncating prompt.`);
@@ -173,7 +176,7 @@ class ApiConnector {
                     }, timeout);
                     
                     try {
-                        const getResponse = await fetch(`https://text.pollinations.ai/${encodedPrompt}?model=${model}&system=${encodedSystem}&seed=${seed}&private=${isPrivate}`, {
+                        const getResponse = await fetch(`https://text.pollinations.ai/${encodedPrompt}?model=${model}&system=${encodedSystem}&seed=${seed}&private=${isPrivate}&max_tokens=${maxTokens}`, {
                             method: 'GET',
                             headers: {
                                 'Accept': 'application/json, text/plain, */*',
@@ -211,8 +214,10 @@ class ApiConnector {
                             try {
                                 const data = JSON.parse(responseText);
                                 if (data.choices && data.choices[0] && data.choices[0].message) {
+                                    console.log(`Generated text with ${model} in ${duration}s (${data.choices[0].message.content.length} chars)`);
                                     return data.choices[0].message.content;
                                 } else if (data.text) {
+                                    console.log(`Generated text with ${model} in ${duration}s (${data.text.length} chars)`);
                                     return data.text;
                                 } else {
                                     return JSON.stringify(data);
@@ -226,7 +231,7 @@ class ApiConnector {
                             }
                         } else {
                             // Plain text response
-                            console.log(`Got text response from ${model} in ${duration}s`);
+                            console.log(`Got text response from ${model} in ${duration}s (${responseText.length} chars)`);
                             return responseText;
                         }
                     } catch (getError) {
@@ -320,7 +325,7 @@ class ApiConnector {
      * Filters models to include only the specified allowed models
      */
     static filterPreferredModels(models) {
-        // Use only these specific models - removed deepseek models per request
+        // Use only these specific models with exact specifications
         const allowedModels = [
             'openai-large',     // GPT-4o
             'openai-reasoning', // o1-mini
@@ -353,7 +358,81 @@ class ApiConnector {
             return aOrder - bOrder;
         });
         
+        // Make sure all models are included even if API doesn't return them
+        const existingModelNames = filtered.map(m => m.name);
+        allowedModels.forEach(modelName => {
+            if (!existingModelNames.includes(modelName)) {
+                const modelData = this.getModelData(modelName);
+                if (modelData) {
+                    filtered.push(modelData);
+                }
+            }
+        });
+        
         return filtered;
+    }
+    
+    /**
+     * Get data for a specific model
+     */
+    static getModelData(modelName) {
+        const modelData = {
+            'openai-large': { 
+                name: 'openai-large',
+                type: 'chat',
+                censored: true,
+                description: 'OpenAI GPT-4o',
+                baseModel: true,
+                vision: true,
+                maxTokens: 8192
+            },
+            'openai-reasoning': {
+                name: 'openai-reasoning',
+                type: 'chat',
+                censored: true,
+                description: 'OpenAI o1-mini',
+                baseModel: true,
+                reasoning: true,
+                maxTokens: 8192
+            },
+            'searchgpt': {
+                name: 'searchgpt',
+                type: 'chat',
+                censored: true,
+                description: 'SearchGPT with realtime news and web search',
+                baseModel: false,
+                internet: true,
+                maxTokens: 8192
+            },
+            'gemini': {
+                name: 'gemini',
+                type: 'chat',
+                censored: true,
+                description: 'Gemini 2.0 Flash',
+                baseModel: true,
+                provider: 'google',
+                maxTokens: 8192
+            },
+            'gemini-thinking': {
+                name: 'gemini-thinking',
+                type: 'chat',
+                censored: true,
+                description: 'Gemini 2.0 Flash Thinking',
+                baseModel: true,
+                provider: 'google',
+                maxTokens: 8192
+            },
+            'claude-hybridspace': {
+                name: 'claude-hybridspace',
+                type: 'chat',
+                censored: true,
+                description: 'Claude Hybridspace',
+                baseModel: true,
+                maxTokens: 8192
+            }
+        };
+        
+        return modelData[modelName];
     }
     
     /**
@@ -368,7 +447,8 @@ class ApiConnector {
                 censored: true,
                 description: 'OpenAI GPT-4o',
                 baseModel: true,
-                vision: true
+                vision: true,
+                maxTokens: 8192
             },
             { 
                 name: 'openai-reasoning',
@@ -376,7 +456,8 @@ class ApiConnector {
                 censored: true,
                 description: 'OpenAI o1-mini',
                 baseModel: true,
-                reasoning: true
+                reasoning: true,
+                maxTokens: 8192
             },
             // Gemini models
             {
@@ -385,7 +466,8 @@ class ApiConnector {
                 censored: true,
                 description: 'Gemini 2.0 Flash',
                 baseModel: true,
-                provider: 'google'
+                provider: 'google',
+                maxTokens: 8192
             },
             {
                 name: 'gemini-thinking',
@@ -393,7 +475,8 @@ class ApiConnector {
                 censored: true,
                 description: 'Gemini 2.0 Flash Thinking',
                 baseModel: true,
-                provider: 'google'
+                provider: 'google',
+                maxTokens: 8192
             },
             // Claude model
             {
@@ -401,7 +484,8 @@ class ApiConnector {
                 type: 'chat',
                 censored: true,
                 description: 'Claude Hybridspace',
-                baseModel: true
+                baseModel: true,
+                maxTokens: 8192
             },
             // SearchGPT
             {
@@ -410,7 +494,8 @@ class ApiConnector {
                 censored: true,
                 description: 'SearchGPT with realtime news and web search',
                 baseModel: false,
-                internet: true
+                internet: true,
+                maxTokens: 8192
             }
         ];
     }
@@ -453,7 +538,7 @@ class ApiConnector {
      * @param {number} maxMessages - Maximum number of messages to include
      * @returns {string} - Formatted conversation history for API context
      */
-    static formatConversationForApi(conversationHistory, maxMessages = 10) {
+    static formatConversationForApi(conversationHistory, maxMessages = 20) { // Increased from 10 to 20
         // Always include the initial topic/prompt if available
         let result = "";
         const initialTopic = conversationHistory.find(msg => msg.role === 'System');
@@ -481,7 +566,7 @@ class ApiConnector {
      * @param {number} maxLength - Maximum allowed length
      * @returns {string} - Truncated history
      */
-    static trimConversationHistory(history, maxLength = 6000) {
+    static trimConversationHistory(history, maxLength = 24000) { // Increased from 12000 to 24000
         if (history.length <= maxLength) return history;
         
         // Split by the separator pattern

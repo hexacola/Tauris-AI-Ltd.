@@ -118,7 +118,71 @@ async function testApiDocumentation() {
     }
 }
 
+// Add function to test long response generation
+async function testLongResponseGeneration(model = 'openai-large') {
+    console.log(`Testing long response generation with model: ${model}`);
+    
+    try {
+        const startTime = Date.now();
+        console.log(`Starting request at ${new Date().toLocaleTimeString()}`);
+        
+        const response = await fetch('https://text.pollinations.ai/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                messages: [
+                    { 
+                        role: 'system', 
+                        content: 'You are a detailed academic writer. Provide comprehensive, in-depth responses with multiple sections.' 
+                    },
+                    { 
+                        role: 'user', 
+                        content: 'Write a detailed analysis of climate change impacts, including scientific evidence, policy implications, and recommended solutions. Include plenty of detail in each section.' 
+                    }
+                ],
+                model: model,
+                private: true,
+                max_tokens: 8192  // Request maximum token length
+            })
+        });
+        
+        const duration = (Date.now() - startTime) / 1000;
+        console.log(`Request completed in ${duration.toFixed(1)} seconds`);
+        
+        if (!response.ok) {
+            console.error(`API error: ${response.status}`);
+            return;
+        }
+        
+        const contentType = response.headers.get('content-type');
+        console.log(`Content type: ${contentType}`);
+        
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            
+            if (data.choices && data.choices[0] && data.choices[0].message) {
+                const text = data.choices[0].message.content;
+                console.log(`Response length: ${text.length} characters`);
+                console.log(`Response first 100 chars: ${text.substring(0, 100)}...`);
+                console.log(`Response last 100 chars: ...${text.substring(text.length - 100)}`);
+                
+                // Check if response appears to be truncated
+                const lastPunctuation = text.search(/[.!?][\s]*$/);
+                console.log(`Response properly terminated: ${lastPunctuation > text.length - 20}`);
+            }
+        } else {
+            const text = await response.text();
+            console.log(`Response length: ${text.length} characters`);
+        }
+    } catch (error) {
+        console.error(`Test failed for long response with model ${model}:`, error);
+    }
+}
+
 // Add to window for easy console access
 window.testModel = testModel;
 window.testAllModels = testAllModels;
 window.testApiDocumentation = testApiDocumentation;
+window.testLongResponseGeneration = testLongResponseGeneration; // Add the new test function
