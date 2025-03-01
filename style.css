@@ -42,6 +42,7 @@ body {
     padding: 20px;
     position: relative;
     color: var(--text-main);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .lithuanian-backdrop {
@@ -201,7 +202,7 @@ textarea:focus, input[type="text"]:focus, input[type="number"]:focus {
     box-shadow: 0 2px 5px var(--shadow);
     border-top: 4px solid #ccc;
     position: relative;
-    transition: transform 0.3s, box-shadow 0.3s;
+    transition: transform 0.3s, box-shadow 0.3s, border-color 0.2s;
 }
 
 .role-card:hover {
@@ -425,10 +426,11 @@ textarea:focus, input[type="text"]:focus, input[type="number"]:focus {
 @media (max-width: 768px) {
     .buttons {
         flex-direction: column;
+        gap: 10px;
     }
     
     .message {
-        max-width: 90%;
+        max-width: 100%;
     }
 
     .worker-settings {
@@ -437,6 +439,49 @@ textarea:focus, input[type="text"]:focus, input[type="number"]:focus {
 
     .worker-roles {
         grid-template-columns: 1fr;
+    }
+    
+    /* Fix water cooler position on mobile */
+    .water-cooler {
+        right: 10px;
+        bottom: 10px;
+        transform: scale(0.8);
+    }
+    
+    .water-bubble {
+        min-width: 100px;
+        max-width: 120px;
+        font-size: 12px;
+        padding: 8px;
+    }
+    
+    .bubble1 {
+        left: -100px;
+        top: -55px;
+    }
+    
+    .bubble2 {
+        left: -100px;
+        top: -100px;
+    }
+}
+
+@media (max-width: 480px) {
+    .office-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .lithuanian-button {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+    
+    .water-cooler {
+        transform: scale(0.6);
+        right: 0;
+        bottom: 0;
     }
 }
 
@@ -458,6 +503,7 @@ textarea:focus, input[type="text"]:focus, input[type="number"]:focus {
     border-top-color: #3498db;
     animation: spin 1s linear infinite;
     display: none;
+    will-change: transform;
 }
 
 .fetching-indicator.active {
@@ -495,11 +541,12 @@ textarea:focus, input[type="text"]:focus, input[type="number"]:focus {
 }
 
 @keyframes error-shake {
-    0%, 100% { transform: translateX(0); }
+    0% { transform: translateX(0); }
     20% { transform: translateX(-10px); }
     40% { transform: translateX(10px); }
     60% { transform: translateX(-5px); }
     80% { transform: translateX(5px); }
+    100% { transform: translateX(0); }
 }
 
 .error-animation {
@@ -855,8 +902,14 @@ input:checked + .slider:before {
 }
 
 @keyframes message-appear {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { 
+        opacity: 0; 
+        transform: translateY(10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
 }
 
 /* Coffee machine */
@@ -897,7 +950,7 @@ input:checked + .slider:before {
 }
 
 .coffee-button:hover {
-    background-color: #666;
+    filter: brightness(1.1);
 }
 
 .coffee-button.espresso {
@@ -975,7 +1028,7 @@ input:checked + .slider:before {
     border-radius: 3px;
 }
 
-/* Updated water bubble styles */
+/* Updated water bubble styles with better animation support */
 .water-bubble {
     position: absolute;
     background-color: rgba(255, 255, 255, 0.95);
@@ -987,7 +1040,7 @@ input:checked + .slider:before {
     min-width: 120px;
     max-width: 150px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    transition: transform 0.2s;
+    transition: transform 0.2s, opacity 0.3s ease;
     z-index: 20;
     word-wrap: break-word;
     white-space: normal;
@@ -995,6 +1048,8 @@ input:checked + .slider:before {
     overflow: hidden;
     text-overflow: ellipsis;
     display: block;
+    will-change: transform, opacity; /* Performance optimization */
+    backface-visibility: hidden; /* Fix for some animation jitters */
 }
 
 .water-bubble::after {
@@ -1019,24 +1074,44 @@ input:checked + .slider:before {
     background-color: rgba(50, 50, 50, 0.95);
 }
 
-/* Adjust bubble positions */
+/* Improved bubble positions and animations */
 .bubble1 {
     top: -65px;
     left: -120px;
-    animation: bubble-appear 10s infinite 1s;
 }
 
 .bubble2 {
     top: -120px;
     left: -120px;
-    animation: bubble-appear 10s infinite 6s;
 }
 
+/* Improved bubble animation with fallbacks */
+@keyframes bubble-appear {
+    0% { 
+        opacity: 0; 
+        transform: translateY(5px) scale(0.95);
+    }
+    15% { 
+        opacity: 1; 
+        transform: translateY(0) scale(1);
+    }
+    80% { 
+        opacity: 1; 
+        transform: translateY(0) scale(1);
+    }
+    100% { 
+        opacity: 0; 
+        transform: translateY(-5px) scale(0.95);
+    }
+}
+
+/* Inner bubbles with improved animations */
 .inner-bubble {
     position: absolute;
     background-color: rgba(255, 255, 255, 0.6);
     border-radius: 50%;
     opacity: 0;
+    pointer-events: none;
 }
 
 .inner-bubble-1 {
@@ -1064,9 +1139,20 @@ input:checked + .slider:before {
 }
 
 @keyframes water-inner-bubble {
-    0% { transform: translateY(60px); opacity: 0; }
-    30% { opacity: 0.7; }
-    100% { transform: translateY(-20px); opacity: 0; }
+    0% { 
+        transform: translateY(60px); 
+        opacity: 0; 
+    }
+    30% { 
+        opacity: 0.7; 
+    }
+    95% {
+        opacity: 0.2;
+    }
+    100% { 
+        transform: translateY(-20px); 
+        opacity: 0; 
+    }
 }
 
 /* Updated bubble animation */
@@ -1188,8 +1274,12 @@ input:checked + .slider:before {
 }
 
 @keyframes heartbeat {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.2); }
+    0%, 100% { 
+        transform: scale(1); 
+    }
+    50% { 
+        transform: scale(1.2); 
+    }
 }
 
 /* Dark theme adjustments for specific elements */
@@ -1342,8 +1432,14 @@ input:checked + .slider:before {
 }
 
 @keyframes holiday-appear {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+    from { 
+        transform: translateX(100%); 
+        opacity: 0; 
+    }
+    to { 
+        transform: translateX(0); 
+        opacity: 1; 
+    }
 }
 
 .holiday-icon {
@@ -1410,9 +1506,20 @@ input:checked + .slider:before {
 }
 
 @keyframes fly-cepelinas {
-    0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-    10% { opacity: 1; }
-    100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+    0% { 
+        transform: translateY(0) rotate(0deg); 
+        opacity: 0; 
+    }
+    10% { 
+        opacity: 1; 
+    }
+    90% { 
+        opacity: 1; 
+    }
+    100% { 
+        transform: translateY(-120vh) rotate(360deg); 
+        opacity: 0; 
+    }
 }
 
 /* Message types */
@@ -1712,4 +1819,42 @@ input:checked + .slider:before {
 
 [data-theme="dark"] .message.revision-message {
     background-color: rgba(255, 218, 0, 0.05);
+}
+
+/* Fix transitions for dark mode */
+[data-theme="dark"] .result-content,
+[data-theme="dark"] .model-select,
+[data-theme="dark"] .water-bubble,
+[data-theme="dark"] .coffee-display,
+[data-theme="dark"] .message {
+    transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+}
+
+/* Improve accessibility for interactive elements */
+.lithuanian-button:focus,
+.coffee-button:focus,
+textarea:focus, 
+input[type="text"]:focus, 
+input[type="number"]:focus,
+.model-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 153, 48, 0.3);
+}
+
+/* Animation class for active water bubbles */
+.water-bubble.active {
+    animation: bubble-appear 8s forwards;
+}
+
+/* Fix for Safari animations */
+@supports (-webkit-appearance:none) {
+    .water-bubble {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+    }
+    
+    .boss-approval-stamp {
+        -webkit-transform: rotate(15deg) translateZ(0);
+        transform: rotate(15deg) translateZ(0);
+    }
 }

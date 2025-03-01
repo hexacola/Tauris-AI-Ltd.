@@ -1041,7 +1041,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Lithuanian extras - additional functionality for Lithuanian-themed elements
 
-// Water cooler conversation manager
+// Water cooler conversation manager with improved animation handling
 const waterCoolerConversations = {
     initialize() {
         // Collection of water cooler phrases - one phrase per bubble
@@ -1070,38 +1070,45 @@ const waterCoolerConversations = {
         setInterval(() => this.updateBubbles(), 30000 + Math.random() * 15000);
     },
     
-    // Update bubble content with random phrases
+    // Update bubble content with random phrases using better animation technique
     updateBubbles() {
         const bubbles = document.querySelectorAll('.water-bubble');
         if (bubbles.length >= 2) {
             const randomIndex = Math.floor(Math.random() * this.phrases.length);
             const conversation = this.phrases[randomIndex];
             
-            // Clear existing animations
+            // Remove existing animation classes and force reflow
             bubbles.forEach(bubble => {
+                bubble.classList.remove('active');
                 bubble.style.animation = 'none';
-                bubble.offsetHeight; // Trigger reflow
+                bubble.offsetHeight; // Force reflow
+                bubble.style.animation = '';
             });
             
-            // Update bubble text and restart animations with proper timing
+            // Update bubble text
             bubbles[0].textContent = conversation[0];
             bubbles[1].textContent = conversation[1];
             
-            // Restart animations with staggered timing
+            // Add animation with staggered timing
             setTimeout(() => {
-                bubbles[0].style.animation = 'bubble-appear 10s 1';
+                bubbles[0].classList.add('active');
                 
                 // Second bubble appears slightly after first
                 setTimeout(() => {
-                    bubbles[1].style.animation = 'bubble-appear 10s 1';
+                    bubbles[1].classList.add('active');
                 }, 2000);
-            }, 100);
+            }, 300);
         }
     }
 };
 
-// Initialize water cooler conversations
+// Enhanced initialization with error handling
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize water cooler conversations
-    waterCoolerConversations.initialize();
+    try {
+        // Initialize water cooler conversations
+        waterCoolerConversations.initialize();
+        console.log("Water cooler conversations initialized");
+    } catch (error) {
+        console.error("Error initializing water cooler:", error);
+    }
 });
