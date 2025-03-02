@@ -924,8 +924,8 @@ IMPORTANT INSTRUCTIONS:
 
             // Trim prompt if it's too long
             let trimmedPrompt = prompt;
-            if (prompt.length > 12000) {
-                console.warn("Prompt exceeds recommended length, trimming to 12000 characters");
+            if (prompt.length > 50000) {
+                console.warn("Prompt exceeds recommended length, trimming to 50000 characters");
                 trimmedPrompt = prompt.substring(0, 11900) + "... [text trimmed for length]";
             }
 
