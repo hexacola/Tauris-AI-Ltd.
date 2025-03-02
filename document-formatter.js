@@ -10,7 +10,7 @@ class DocumentFormatter {
     static formatFinalDocument(text) {
         if (!text) return null;
         
-        // Create a container for the formatted content
+        // Create a container for the formatted document
         const container = document.createElement('div');
         container.className = 'formatted-document';
         
@@ -23,9 +23,23 @@ class DocumentFormatter {
         // Remove references to team contributions, acknowledgments at the end
         const cleanedText = this.removeTeamAcknowledgments(textWithoutStamp);
         
-        const paragraphs = cleanedText.split('\n\n').filter(p => p.trim());
+        // Process paragraphs with proper structure
+        this.processDocumentContent(container, cleanedText);
         
-        // Process headings and paragraphs
+        // Add the stamp and signature as visual elements at the end
+        const signatureContainer = this.createSignatureBlock();
+        container.appendChild(signatureContainer);
+        
+        return container;
+    }
+    
+    /**
+     * Process document content into structured HTML with headings and paragraphs
+     * @param {HTMLElement} container - The container element
+     * @param {string} text - Cleaned text content
+     */
+    static processDocumentContent(container, text) {
+        const paragraphs = text.split('\n\n').filter(p => p.trim());
         let currentSection = null;
         
         paragraphs.forEach(paragraph => {
@@ -59,11 +73,6 @@ class DocumentFormatter {
                 }
             }
         });
-        
-        // Add the stamp as a visual element at the end (but not duplicate signature)
-        this.addApprovalStamp(container);
-        
-        return container;
     }
     
     /**
@@ -166,37 +175,23 @@ class DocumentFormatter {
     }
     
     /**
-     * Add the approval stamp to the document
-     * @param {HTMLElement} container - The document container
+     * Create signature block with approval stamp positioned correctly
+     * @returns {HTMLElement} - The signature container with stamp
      */
-    static addApprovalStamp(container) {
-        // Create stamp div only - don't add signature since it will be handled separately
+    static createSignatureBlock() {
+        // Create signature container
+        const signatureContainer = document.createElement('div');
+        signatureContainer.className = 'document-signature-container';
+        
+        // Create stamp div
         const stampDiv = document.createElement('div');
         stampDiv.className = 'boss-approval-stamp';
         stampDiv.textContent = 'ŠEFO PATVIRTINTA';
         
-        // Add only the stamp to the container
-        container.appendChild(stampDiv);
-        
-        // Trigger the stamp animation after a delay
-        setTimeout(() => {
-            stampDiv.classList.add('stamp-visible');
-        }, 500);
-        
-        // Add signature block at right side of content
-        this.addSignatureBlock(container);
-    }
-    
-    /**
-     * Add signature block positioned at right side
-     * @param {HTMLElement} container - The document container
-     */
-    static addSignatureBlock(container) {
-        // Create signature container
-        const signatureContainer = document.createElement('div');
-        signatureContainer.className = 'document-signature';
-        
         // Create signature elements
+        const signatureBlock = document.createElement('div');
+        signatureBlock.className = 'signature-block';
+        
         const signatureLine = document.createElement('div');
         signatureLine.className = 'signature-line';
         
@@ -206,19 +201,28 @@ class DocumentFormatter {
         
         const signatureTitle = document.createElement('div');
         signatureTitle.className = 'signature-title';
+        signatureTitle.textContent = 'Vyr. AI Vadovas';
         
         const signatureDate = document.createElement('div');
         signatureDate.className = 'signature-date';
         signatureDate.textContent = '2025-02-28';
         
         // Add signature elements to the signature container
-        signatureContainer.appendChild(signatureLine);
-        signatureContainer.appendChild(signatureName);
-        signatureContainer.appendChild(signatureTitle);
-        signatureContainer.appendChild(signatureDate);
+        signatureBlock.appendChild(signatureLine);
+        signatureBlock.appendChild(signatureName);
+        signatureBlock.appendChild(signatureTitle);
+        signatureBlock.appendChild(signatureDate);
         
-        // Add the signature container
-        container.appendChild(signatureContainer);
+        // Add stamp and signature block to container
+        signatureContainer.appendChild(stampDiv);
+        signatureContainer.appendChild(signatureBlock);
+        
+        // Trigger the stamp animation after a delay
+        setTimeout(() => {
+            stampDiv.classList.add('stamp-visible');
+        }, 500);
+        
+        return signatureContainer;
     }
     
     /**
@@ -236,6 +240,10 @@ class DocumentFormatter {
                 text-align: justify;
                 padding: 20px;
                 position: relative;
+                margin-bottom: 80px; /* Space for signature */
+                max-width: 800px;
+                margin-left: auto;
+                margin-right: auto;
             }
             
             .document-heading {
@@ -243,68 +251,63 @@ class DocumentFormatter {
                 margin-top: 1.5em;
                 margin-bottom: 1em;
                 font-size: 1.2em;
+                color: var(--text-main);
             }
             
             .document-section p {
                 margin-bottom: 1em;
-                text-indent: 1.5em;
+                text-indent: 2em;
             }
             
             .document-section p:first-of-type {
                 text-indent: 0;
             }
             
+            /* New signature container layout */
+            .document-signature-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-top: 60px;
+                position: relative;
+            }
+            
             .boss-approval-stamp {
-                margin-top: 40px;
-                margin-bottom: 20px;
+                flex: 0 0 220px;
                 padding: 15px;
-                width: 200px;
+                width: 220px;
                 text-align: center;
-                color: #ff3333;
+                color: #C1272D; /* Lithuanian flag red */
                 font-weight: bold;
                 font-size: 24px;
                 letter-spacing: 1px;
                 font-family: 'Arial Black', sans-serif;
-                border: 5px solid #ff3333;
+                border: 5px solid #C1272D;
                 border-radius: 10px;
-                transform: rotate(-5deg);
+                transform: rotate(-5deg) scale(0.8);
                 opacity: 0;
-                margin-left: auto;
-                transition: opacity 0.5s, transform 0.5s;
+                transition: opacity 0.5s, transform 0.7s;
+                z-index: 5;
+                margin-right: 20px;
             }
             
             .boss-approval-stamp.stamp-visible {
-                opacity: 1;
-                transform: rotate(0deg);
+                opacity: 0.9;
+                transform: rotate(0deg) scale(1);
             }
             
-            .citation {
-                color: #666;
-            }
-            
-            [data-theme="dark"] .formatted-document {
-                color: #e0e0e0;
-            }
-            
-            [data-theme="dark"] .citation {
-                color: #aaa;
-            }
-            
-            .document-signature {
-                margin-top: 30px;
-                text-align: right;
+            .signature-block {
+                flex: 0 0 200px;
+                text-align: center;
                 font-family: 'Times New Roman', serif;
-                padding-right: 30px;
                 font-size: 16px;
-                position: absolute;
-                right: 20px;
-                bottom: 20px;
+                margin-top: 10px;
             }
             
             .signature-line {
                 border-top: 1px solid #000;
                 width: 200px;
-                margin: 0 0 10px auto;
+                margin-bottom: 10px;
             }
             
             .signature-name {
@@ -319,8 +322,56 @@ class DocumentFormatter {
                 margin-top: 5px;
             }
             
+            .citation {
+                color: #666;
+                font-style: italic;
+            }
+            
+            [data-theme="dark"] .formatted-document {
+                color: #e0e0e0;
+            }
+            
+            [data-theme="dark"] .citation {
+                color: #aaa;
+            }
+            
+            [data-theme="dark"] .boss-approval-stamp {
+                color: #ff6b6b;
+                border-color: #ff6b6b;
+            }
+            
             [data-theme="dark"] .signature-line {
                 border-top-color: #ccc;
+            }
+            
+            /* Additional style for citations in appropriate format */
+            .document-section .citation-list {
+                margin-top: 2em;
+                border-top: 1px solid #ddd;
+                padding-top: 1em;
+            }
+            
+            .document-section .citation-item {
+                padding-left: 2em;
+                text-indent: -2em;
+                margin-bottom: 0.8em;
+            }
+            
+            [data-theme="dark"] .document-section .citation-list {
+                border-top-color: #555;
+            }
+            
+            /* Responsive adjustments */
+            @media (max-width: 768px) {
+                .document-signature-container {
+                    flex-direction: column;
+                    align-items: center;
+                }
+                
+                .boss-approval-stamp {
+                    margin-right: 0;
+                    margin-bottom: 30px;
+                }
             }
         `;
         
@@ -370,11 +421,42 @@ class DocumentFormatter {
             };
         }
     }
+    
+    /**
+     * Format the document manually (public API for direct calling)
+     */
+    static formatCurrentDocument() {
+        const finalResultElement = document.getElementById('finalResult');
+        if (finalResultElement && finalResultElement.textContent) {
+            const cleanedText = this.removeTeamAcknowledgments(finalResultElement.textContent);
+            const formattedDocument = this.formatFinalDocument(cleanedText);
+            if (formattedDocument) {
+                finalResultElement.innerHTML = '';
+                finalResultElement.appendChild(formattedDocument);
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 // Format document when approval happens
 document.addEventListener('DOMContentLoaded', () => {
     DocumentFormatter.setupFormatOnApproval();
+    
+    // Add a debug button for testing the formatter (only in debug mode)
+    if (location.search.includes('debug=true')) {
+        const debugBtn = document.createElement('button');
+        debugBtn.textContent = 'Format Document';
+        debugBtn.className = 'lithuanian-button';
+        debugBtn.style.marginTop = '10px';
+        debugBtn.onclick = () => DocumentFormatter.formatCurrentDocument();
+        
+        const resultActions = document.querySelector('.result-actions');
+        if (resultActions) {
+            resultActions.appendChild(debugBtn);
+        }
+    }
 });
 
 // Make available globally
