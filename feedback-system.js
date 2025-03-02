@@ -6,7 +6,7 @@ class FeedbackSystem {
     constructor() {
         this.isRevisionMode = false;
         this.revisionCount = 0;
-        this.maxRevisions = 3;
+        this.maxRevisions = 10;
         this.feedbackHistory = [];
         this.currentWorkerId = null;
         this.revisionInProgress = false;
