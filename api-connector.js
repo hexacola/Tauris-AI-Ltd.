@@ -17,7 +17,7 @@ class ApiConnector {
             timeout = 120000, // Increased timeout to 120 seconds for longer responses
             isPrivate = true,
             forcePost = false,
-            maxTokens = 8192 // Default to 8192 tokens (about 6000 words) for longer responses
+            maxTokens = 20000 // Default to 8192 tokens (about 6000 words) for longer responses
         } = options;
         
         // Check if model is known to fail with 500 errors
@@ -38,7 +38,7 @@ class ApiConnector {
         
         // Check if prompt is too long (> 8000 chars) - URLs have length limits
         const promptLength = prompt.length + systemPrompt.length;
-        const usePostOnly = forcePost || promptLength > 3000; // Force POST for long prompts
+        const usePostOnly = forcePost || promptLength > 20000; // Force POST for long prompts
         
         try {
             // Always use POST method for consistency with API docs
@@ -164,7 +164,7 @@ class ApiConnector {
                     
                     if (estimatedUrlLength > 8000) {
                         console.warn(`URL too long (${estimatedUrlLength} chars) for GET request. Truncating prompt.`);
-                        const maxPromptLength = prompt.length - (estimatedUrlLength - 7500);
+                        const maxPromptLength = prompt.length - (estimatedUrlLength - 20000);
                         const truncatedPrompt = prompt.substring(0, maxPromptLength) + "... [truncated]";
                         return this.generateText(truncatedPrompt, systemPrompt, model, options);
                     }
@@ -384,7 +384,7 @@ class ApiConnector {
                 description: 'OpenAI GPT-4o',
                 baseModel: true,
                 vision: true,
-                maxTokens: 8192
+                maxTokens: 20000
             },
             'openai-reasoning': {
                 name: 'openai-reasoning',
@@ -393,7 +393,7 @@ class ApiConnector {
                 description: 'OpenAI o1-mini',
                 baseModel: true,
                 reasoning: true,
-                maxTokens: 8192
+                maxTokens: 20000
             },
             'searchgpt': {
                 name: 'searchgpt',
@@ -402,7 +402,7 @@ class ApiConnector {
                 description: 'SearchGPT with realtime news and web search',
                 baseModel: false,
                 internet: true,
-                maxTokens: 8192
+                maxTokens: 20000
             },
             'gemini': {
                 name: 'gemini',
@@ -411,7 +411,7 @@ class ApiConnector {
                 description: 'Gemini 2.0 Flash',
                 baseModel: true,
                 provider: 'google',
-                maxTokens: 8192
+                maxTokens: 20000
             },
             'gemini-thinking': {
                 name: 'gemini-thinking',
@@ -420,7 +420,7 @@ class ApiConnector {
                 description: 'Gemini 2.0 Flash Thinking',
                 baseModel: true,
                 provider: 'google',
-                maxTokens: 8192
+                maxTokens: 20000
             },
             'claude-hybridspace': {
                 name: 'claude-hybridspace',
@@ -428,7 +428,7 @@ class ApiConnector {
                 censored: true,
                 description: 'Claude Hybridspace',
                 baseModel: true,
-                maxTokens: 8192
+                maxTokens: 20000
             }
         };
         
@@ -448,7 +448,7 @@ class ApiConnector {
                 description: 'OpenAI GPT-4o',
                 baseModel: true,
                 vision: true,
-                maxTokens: 8192
+                maxTokens: 20000
             },
             { 
                 name: 'openai-reasoning',
@@ -457,7 +457,7 @@ class ApiConnector {
                 description: 'OpenAI o1-mini',
                 baseModel: true,
                 reasoning: true,
-                maxTokens: 8192
+                maxTokens: 20000
             },
             // Gemini models
             {
@@ -467,7 +467,7 @@ class ApiConnector {
                 description: 'Gemini 2.0 Flash',
                 baseModel: true,
                 provider: 'google',
-                maxTokens: 8192
+                maxTokens: 20000
             },
             {
                 name: 'gemini-thinking',
@@ -476,7 +476,7 @@ class ApiConnector {
                 description: 'Gemini 2.0 Flash Thinking',
                 baseModel: true,
                 provider: 'google',
-                maxTokens: 8192
+                maxTokens: 20000
             },
             // Claude model
             {
@@ -485,7 +485,7 @@ class ApiConnector {
                 censored: true,
                 description: 'Claude Hybridspace',
                 baseModel: true,
-                maxTokens: 8192
+                maxTokens: 20000
             },
             // SearchGPT
             {
@@ -495,7 +495,7 @@ class ApiConnector {
                 description: 'SearchGPT with realtime news and web search',
                 baseModel: false,
                 internet: true,
-                maxTokens: 8192
+                maxTokens: 20000
             }
         ];
     }
@@ -566,7 +566,7 @@ class ApiConnector {
      * @param {number} maxLength - Maximum allowed length
      * @returns {string} - Truncated history
      */
-    static trimConversationHistory(history, maxLength = 24000) { // Increased from 12000 to 24000
+    static trimConversationHistory(history, maxLength = 100000) { // Increased from 12000 to 24000
         if (history.length <= maxLength) return history;
         
         // Split by the separator pattern
