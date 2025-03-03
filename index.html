@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tauris AI Ltd. - Lithuanian Writing Bureau</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+</head>
+<body>
+    <div class="lithuanian-backdrop"></div>
+    <div class="container">
+        <header class="office-header">
+            <div class="company-logo">
+                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsPSIjRkZEQTAwIiBkPSJNMCAwaDEwMHYzMy4zSDB6Ii8+PHBhdGggZmlsbD0iIzAwOTkzMCIgZD0iTTAgMzMuM2gxMDB2MzMuNEgweiIvPjxwYXRoIGZpbGw9IiNDMTI3MkQiIGQ9Ik0wIDY2LjdoMTAwVjEwMEgweiIvPjwvc3ZnPg==" alt="Lithuanian flag colors" class="flag-icon">
+                <div class="logo-text">
+                    <h1>Tauris AI Ltd.</h1>
+                    <p class="tagline">„Kodėl dirbti, kai mašinos gali dirbti už jus?"</p>
+                </div>
+            </div>
+            <div class="office-controls">
+                <div class="theme-toggle">
+                    <label class="switch">
+                        <input type="checkbox" id="themeToggle" checked>
+                        <span class="slider round"></span>
+                        <span class="mode-icon light">☀️</span>
+                        <span class="mode-icon dark">🌙</span>
+                    </label>
+                </div>
+                <div class="office-status">
+                    <span class="status-indicator open">Atidaryta</span>
+                    <div class="office-time">Darbo valandos: 24/7 (Robotai niekada nemiega!)</div>
+                </div>
+            </div>
+        </header>
+        
+        <section class="welcome-section">
+            <h2>Sveiki atvykę į virtualų AI biurą!</h2>
+            <p class="welcome-message">Čia dirba geriausi Lietuvos dirbtinio intelekto darbuotojai. Įveskite savo užduotį ir leiskite mūsų komandai atlikti darbą už jus! Jie dirba už alų ir cepelinų pietūs.</p>
+        </section>
+
+        <div class="control-panel">
+            <div class="input-group">
+                <label for="initialPrompt">Jūsų užsakymas:</label>
+                <textarea id="initialPrompt" rows="3" placeholder="Įveskite užduotį, pvz., „Parašykite įvadą bakalauro darbui apie dirbtinį intelektą""></textarea>
+            </div>
+            
+            <div class="worker-roles">
+                <div class="role-card writer">
+                    <div class="worker-photo">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGZpbGw9IiMzMzMiIGN4PSI1MCIgY3k9IjQwIiByPSIyNSIvPjxjaXJjbGUgZmlsbD0iIzU1NSIgY3g9IjUwIiBjeT0iMzAiIHI9IjE4Ii8+PHBhdGggZmlsbD0iI2VjNzEwNiIgZD0iTTIwLDg1YzAtMTYuNiwxMy40LTMwLDMwLTMwczMwLDEzLjQsMzAsMzBINjVjMC04LjMtNi43LTE1LTE1LTE1cy0xNSw2LjctMTUsMTVIMjB6Ii8+PHJlY3QgZmlsbD0iIzc3NyIgeD0iMzAiIHk9IjYyIiB3aWR0aD0iNDAiIGhlaWdodD0iMTAiLz48L3N2Zz4=" alt="Writer" class="worker-img">
+                        <div class="coffee-mug">☕</div>
+                    </div>
+                    <h3>Rašytojas Jonas</h3>
+                    <p>Mūsų žodžių meistras. Pasižymi turtinga, vaizdinga lietuvių kalba su autentiškais posakiais. Kuria sklandžius, įtaigius tekstus, išnaudodamas visas gimtosios kalbos galimybes.</p>
+                    <div class="model-selection">
+                        <label for="writerModel">Smegenys:</label>
+                        <select id="writerModel" class="model-select">
+                            <option value="openai-large">OpenAI GPT-4o 👁️</option>
+                        </select>
+                        <div class="worker-mood">Nuotaika: Įkvėptas ☀️</div>
+                    </div>
+                </div>
+                
+                <div class="role-card researcher">
+                    <div class="worker-photo">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGZpbGw9IiMzMzMiIGN4PSI1MCIgY3k9IjQwIiByPSIyNSIvPjxjaXJjbGUgZmlsbD0iIzU1NSIgY3g9IjUwIiBjeT0iMzAiIHI9IjE4Ii8+PHBhdGggZmlsbD0iIzAwOTkzMCIgZD0iTTIwLDg1YzAtMTYuNiwxMy40LTMwLDMwLTMwczMwLDEzLjQsMzAsMzBINjVjMC04LjMtNi43LTE1LTE1LTE1cy0xNSw2LjctMTUsMTVIMjB6Ii8+PGNpcmNsZSBmaWxsPSIjZWVlIiBjeD0iNjUiIGN5PSI0MCIgcj0iMTAiLz48Y2lyY2xlIGZpbGw9IiNlZWUiIGN4PSIzNSIgY3k9IjQwIiByPSIxMCIvPjxyZWN0IGZpbGw9IiNlZWUiIHg9IjQwIiB5PSIyNSIgd2lkdGg9IjIwIiBoZWlnaHQ9IjUiLz48L3N2Zz4=" alt="Researcher" class="worker-img">
+                        <div class="glasses">👓</div>
+                    </div>
+                    <h3>Tyrėja Gabija</h3>
+                    <p>Mūsų faktų ekspertė. Naudoja tik patikimus lietuviškus ir tarptautinius šaltinius, puikiai išmano akademinę metodologiją, moka paaiškinti sudėtingas sąvokas aiškiai ir tiksliai lietuvių kalba.</p>
+                    <div class="model-selection">
+                        <label for="researcherModel">Smegenys:</label>
+                        <select id="researcherModel" class="model-select">
+                            <option value="searchgpt">SearchGPT 🌐</option>
+                        </select>
+                        <div class="worker-mood">Nuotaika: Smalsus 🔍</div>
+                    </div>
+                </div>
+                
+                <div class="role-card critic">
+                    <div class="worker-photo">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGZpbGw9IiMzMzMiIGN4PSI1MCIgY3k9IjQwIiByPSIyNSIvPjxjaXJjbGUgZmlsbD0iIzU1NSIgY3g9IjUwIiBjeT0iMzAiIHI9IjE4Ii8+PHBhdGggZmlsbD0iI0MxMjcyRCIgZD0iTTIwLDg1YzAtMTYuNiwxMy40LTMwLDMwLTMwczMwLDEzLjQsMzAsMzBINjVjMC04LjMtNi43LTE1LTE1LTE1cy0xNSw2LjctMTUsMTVIMjB6Ii8+PGxpbmUgc3Ryb2tlPSIjZWVlIiBzdHJva2Utd2lkdGg9IjIiIHgxPSIzNSIgeTE9IjM1IiB4Mj0iNDUiIHkyPSI0MCIvPjxsaW5lIHN0cm9rZT0iI2VlZSIgc3Ryb2tlLXdpZHRoPSIyIiB4MT0iNjUiIHkxPSIzNSIgeDI9IjU1IiB5Mj0iNDAiLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiNlZWUiIHN0cm9rZS13aWR0aD0iMiIgZD0iTTQwLDU1YzUsLTUsMTUsLTUsMjAsMCIvPjwvc3ZnPg==" alt="Critic" class="worker-img">
+                        <div class="magnifying-glass">🧐</div>
+                    </div>
+                    <h3>Kritikas Vytautas</h3>
+                    <p>Mūsų kokybės ekspertas. Subalansuotai vertina tekstus, visada pradėdamas nuo stipriųjų pusių identifikavimo. Pateikia konstruktyvią kritiką, konkrečiai nurodydamas tobulintinas vietas ir siūlydamas pagerinimo būdus.</p>
+                    <div class="model-selection">
+                        <label for="criticModel">Smegenys:</label>
+                        <select id="criticModel" class="model-select">
+                            <option value="openai-reasoning">OpenAI o1-mini 🧠</option>
+                        </select>
+                        <div class="worker-mood">Nuotaika: Skeptiškas 🤨</div>
+                    </div>
+                </div>
+                
+                <div class="role-card editor">
+                    <div class="worker-photo">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGZpbGw9IiMzMzMiIGN4PSI1MCIgY3k9IjQwIiByPSIyNSIvPjxjaXJjbGUgZmlsbD0iIzU1NSIgY3g9IjUwIiBjeT0iMzAiIHI9IjE4Ii8+PHBhdGggZmlsbD0iI2ZmZGEwMCIgZD0iTTIwLDg1YzAtMTYuNiwxMy40LTMwLDMwLTMwczMwLDEzLjQsMzAsMzBINjVjMC04LjMtNi43LTE1LTE1LTE1cy0xNSw2LjctMTUsMTVIMjB6Ii8+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZWVlIiBzdHJva2Utd2lkdGg9IjIiIGQ9Ik00MCw0MGMwLDAsMTAsMTAsMjAsMCIvPjxjaXJjbGUgZmlsbD0iI2VlZSIgY3g9IjQwIiBjeT0iMzAiIHI9IjMiLz48Y2lyY2xlIGZpbGw9IiNlZWUiIGN4PSI2MCIgY3k9IjMwIiByPSIzIi8+PC9zdmc+" alt="Editor" class="worker-img">
+                        <div class="red-pen">✏️</div>
+                    </div>
+                    <h3>Redaktorė Eglė</h3>
+                    <p>Mūsų kalbos tobulintoja. Turi išskirtinį akylumą pastebėti net mažiausias gramatines klaidas, meistriškai gerina teksto rišlumą ir sklandumą, išlaikydama autoriaus stilių. Išmano visas lietuvių kalbos taisykles iki smulkmenų.</p>
+                    <div class="model-selection">
+                        <label for="editorModel">Smegenys:</label>
+                        <select id="editorModel" class="model-select">
+                            <option value="claude-hybridspace">Claude Hybridspace</option>
+                        </select>
+                        <div class="worker-mood">Nuotaika: Pedantiška ✓</div>
+                    </div>
+                </div>
+
+                <div class="role-card boss">
+                    <div class="worker-photo">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGZpbGw9IiMzMzMiIGN4PSI1MCIgY3k9IjQwIiByPSIyNSIvPjxjaXJjbGUgZmlsbD0iIzU1NSIgY3g9IjUwIiBjeT0iMzAiIHI9IjE4Ii8+PHBhdGggZmlsbD0iIzAwOTkzMCIgZD0iTTIwLDg1YzAtMTYuNiwxMy40LTMwLDMwLTMwczMwLDEzLjQsMzAsMzBINjVjMC04LjMtNi43LTE1LTE1LTE1cy0xNSw2LjctMTUsMTVIMjB6Ii8+PHJlY3QgZmlsbD0iI0ZGREEwMCIgeD0iNDIiIHk9IjI2IiB3aWR0aD0iMTYiIGhlaWdodD0iMTAiIHJ4PSIyIiByeT0iMiIvPjxjaXJjbGUgZmlsbD0iI2VlZSIgY3g9IjQwIiBjeT0iMzUiIHI9IjMiLz48Y2lyY2xlIGZpbGw9IiNlZWUiIGN4PSI2MCIgY3k9IjM1IiByPSIzIi8+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZWVlIiBzdHJva2Utd2lkdGg9IjIiIGQ9Ik00MCw0NWMwLDAsMTAsMTAsMjAsMCIvPjwvc3ZnPg==" alt="Boss" class="worker-img">
+                        <div class="tie">👔</div>
+                    </div>
+                    <h3>Šefas Tauris</h3>
+                    <p>Mūsų strategas ir lyderis. Meistriškai apjungia visų darbuotojų indėlį į vieną nuoseklų rezultatą. Priima galutinius sprendimus, pagrįstus specialistų įžvalgomis, išrenka esminius dalykus ir atmeta nereikalingas detales.</p>
+                    <div class="model-selection">
+                        <label for="bossModel">Smegenys:</label>
+                        <select id="bossModel" class="model-select">
+                            <option value="openai-reasoning">OpenAI o1-mini 🧠</option>
+                            <option value="openai-large">OpenAI GPT-4o 👁️</option>
+                            <option value="claude-hybridspace">Claude Hybridspace</option>
+                        </select>
+                        <div class="worker-mood">Nuotaika: Pasitikintis 💼</div>
+                    </div>
+                    <div class="boss-seal">
+                        <div class="boss-seal-inner">PATVIRTINTA</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="collaboration-process">
+                <div class="coffee-machine">
+                    <div class="coffee-display">Kava paruošta!</div>
+                    <div class="coffee-buttons">
+                        <button class="coffee-button espresso">Espresso</button>
+                        <button class="coffee-button latte">Latte</button>
+                    </div>
+                </div>
+                <div class="collaboration-info">
+                    <h4>Biuro darbo procesas</h4>
+                    <ol>
+                        <li>Jonas kuria pradinį juodraštį su turtinga, vaizdinga lietuvių kalba</li>
+                        <li>Gabija prideda faktinius duomenis, akademines įžvalgas ir patikimas nuorodas</li>
+                        <li>Vytautas konstruktyviai analizuoja tekstą, nurodydamas stiprybes ir tobulintinas vietas</li>
+                        <li>Eglė ištaiso visas kalbos klaidas ir patobulina teksto sklandumą</li>
+                        <li>Šefas Tauris apjungia visų darbą į galutinį, profesionalų rezultatą</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="buttons">
+                <button id="startBtn" class="lithuanian-button">Pradėti darbą</button>
+                <button id="stopBtn" class="lithuanian-button stop" disabled>Sustabdyti</button>
+                <button id="clearBtn" class="lithuanian-button clear">Naujas užsakymas</button>
+            </div>
+            
+            <div class="conversation-settings">
+                <div class="setting-group">
+                    <label for="numExchanges">Iteracijų skaičius:</label>
+                    <input type="number" id="numExchanges" min="1" max="10" value="1">
+                </div>
+                <div class="setting-group">
+                    <label for="delayBetweenExchanges">Pertraukos (ms):</label>
+                    <input type="number" id="delayBetweenExchanges" min="0" max="5000" value="2000">
+                </div>
+            </div>
+            
+            <div class="office-notice">
+                <div class="notice-icon">📢</div>
+                <div class="notice-content">
+                    <strong>Biuro pranešimas:</strong> <span id="statusMessage">Šiandien kavos aparatas veikia! 🎉</span>
+                </div>
+            </div>
+            
+            <div class="progress-container">
+                <div id="progressBar" class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <span id="progressText">0%</span>
+                <div class="model-status">
+                    <span id="modelStatusText"></span>
+                    <div id="fetchingIndicator" class="fetching-indicator"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-container">
+            <div class="chat-header">
+                <h3>Biuro pokalbiai</h3>
+                <div class="chat-time">
+                    <div class="office-clock">
+                        <div class="clock-face">
+                            <div class="clock-hour"></div>
+                            <div class="clock-minute"></div>
+                        </div>
+                    </div>
+                    <span id="officeClock">09:25</span>
+                </div>
+            </div>
+            <div id="chatLog" class="chat-log"></div>
+            <div class="water-cooler">
+                <div class="water-bubble bubble1"></div>
+                <div class="water-bubble bubble2"></div>
+                <div class="water-bottle">
+                    <div class="inner-bubble inner-bubble-1"></div>
+                    <div class="inner-bubble inner-bubble-2"></div>
+                    <div class="inner-bubble inner-bubble-3"></div>
+                </div>
+                <div class="water-stand"></div>
+            </div>
+        </div>
+        
+        <div class="final-result">
+            <div class="result-header"></div>
+                <h2>Galutinis rezultatas <span id="resultStatus">(Darbas vyksta...)</span></h2>
+            </div>
+            <div id="finalResult" class="result-content"></div>
+            <div class="result-actions">
+                <button id="copyResultBtn" class="lithuanian-button">Kopijuoti tekstą</button>
+                <button id="downloadResultBtn" class="lithuanian-button">Atsisiųsti dokumentą</button>
+            </div>
+            <div class="easter-egg">
+                <div class="cepelinai">🥟</div>
+                <div class="easter-egg-text">Sėkmingai baigus darbą, visi darbuotojai gaus cepelinų!</div>
+            </div>
+        </div>
+        <footer class="office-footer">
+            <div class="footer-content">
+                <p>© 2025 Tauris AI Ltd. - "Kur dirbtinis intelektas kalba lietuviškai ir dirba už cepelinų pietūs"</p>
+                <p class="lithuanian-pride">Pagaminta su <span class="heart">❤️</span> Lietuvoje</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+    // Simple feature detection to ensure AbortSignal.timeout is available
+    if (!AbortSignal.timeout) {
+        AbortSignal.timeout = function(ms) {
+            const controller = new AbortController();
+            setTimeout(() => controller.abort(new DOMException('TimeoutError')), ms);
+            return controller.signal;
+        };
+    }
+    
+    // Office clock functionality
+    function updateOfficeClock() {
+        const now = new Date();
+        let hours = now.getHours();
+        let minutes = now.getMinutes();
+        
+        // Add Lithuanian twist - clocks run differently in our virtual Lithuanian office
+        if (Math.random() > 0.9) {
+            hours = (hours + Math.floor(Math.random() * 3) - 1) % 24;
+            minutes = Math.floor(Math.random() * 60);
+        }
+        
+        hours = hours < 10 ? '0' + hours : hours;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        
+        document.getElementById('officeClock').textContent = `${hours}:${minutes}`;
+        
+        // Update clock hands
+        const hourHand = document.querySelector('.clock-hour');
+        const minuteHand = document.querySelector('.clock-minute');
+        
+        const hourDeg = (hours % 12) * 30 + minutes * 0.5;
+        const minuteDeg = minutes * 6;
+        
+        if (hourHand && minuteHand) {
+            hourHand.style.transform = `rotate(${hourDeg}deg)`;
+            minuteHand.style.transform = `rotate(${minuteDeg}deg)`;
+        }
+        
+        // Schedule next update
+        setTimeout(updateOfficeClock, 60000); // Update every minute
+    }
+    
+    // Add theme toggle functionality
+    function setupThemeToggle() {
+        const themeToggle = document.getElementById('themeToggle');
+        
+        // Initialize theme from localStorage or default to dark
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        themeToggle.checked = savedTheme === 'dark';
+        
+        // Add change event listener
+        themeToggle.addEventListener('change', function() {
+            const theme = this.checked ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        });
+    }
+    
+    // Start the office clock and theme toggle on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateOfficeClock();
+        setupThemeToggle();
+        
+        // Coffee machine interactions
+        document.querySelectorAll('.coffee-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const display = document.querySelector('.coffee-display');
+                const type = this.classList.contains('espresso') ? 'Espresso' : 'Latte';
+                display.textContent = `${type} ruošiamas...`;
+                
+                setTimeout(() => {
+                    display.textContent = `${type} paruoštas!`;
+                    
+                    // Add message to chat
+                    if (typeof addMessageToChatLog === 'function') {
+                        addMessageToChatLog('Kavos aparatas', `${type} paruoštas! Kas nori kavos?`, 'system coffee-message');
+                    }
+                }, 1500);
+            });
+        });
+    });
+    </script>
+    <!-- Add the intro-animation.js script near the top of script loading -->
+    <script defer src="js/intro-animation.js"></script>
+    
+    <!-- Load boss-phrases.js first -->
+    <script defer src="js/boss-phrases.js"></script>
+
+    <!-- Add these script tags before your main application script -->
+    <script defer src="js/retry-handler.js"></script>
+    <script defer src="js/pollinations-api-client.js"></script>
+
+    <!-- Then load other scripts -->
+    <script defer src="js/model-availability.js"></script>
+    <script defer src="js/api-connector.js"></script>
+    <script defer src="js/api-helper.js"></script>
+    <script defer src="js/error-fix.js"></script>
+    <script defer src="js/cors-proxy.js"></script>
+    <script defer src="js/error-animations.js"></script>
+    <script defer src="js/verification.js"></script>
+    <script defer src="js/api-test.js"></script>
+    <script defer src="js/script.js"></script>
+    <script defer src="js/lithuanian-extras.js"></script>
+    <script defer src="js/stamp-effects.js"></script>
+    <script defer src="js/utility.js"></script>
+    <script defer src="js/lietuviskas-thinking.js"></script>
+    <script defer src="js/feedback-system.js"></script>
+    <script defer src="js/outputFormatting.js"></script>
+    <script defer src="js/document-formatter.js"></script>
+</body>
+</html>
