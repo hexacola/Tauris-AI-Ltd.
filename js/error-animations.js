@@ -27,17 +27,6 @@ window.ErrorAnimations = (function() {
         // Add error class to the worker card
         workerCard.classList.add('error');
         
-        // Remove any existing error messages first
-        const existingErrorMsg = workerCard.querySelector('.worker-error');
-        if (existingErrorMsg) {
-            workerCard.removeChild(existingErrorMsg);
-        }
-        
-        const existingErrorDetail = workerCard.querySelector('.error-detail');
-        if (existingErrorDetail) {
-            workerCard.removeChild(existingErrorDetail);
-        }
-        
         // Create error message with Lithuanian name
         const errorMessageDiv = document.createElement('div');
         errorMessageDiv.className = 'worker-error';
@@ -46,7 +35,7 @@ window.ErrorAnimations = (function() {
         // Create error detail with model info
         const errorDetailDiv = document.createElement('div');
         errorDetailDiv.className = 'error-detail';
-        errorDetailDiv.textContent = `${model}: ${error.message || error}`;
+        errorDetailDiv.textContent = `${model}: ${error.message}`;
         
         // Add error elements to worker card
         workerCard.appendChild(errorMessageDiv);
