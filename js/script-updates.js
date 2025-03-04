@@ -34,9 +34,9 @@ async function populateModelOptions() {
         // Set default models for each worker
         const modelDefaults = {
             'writerModel': 'openai',
-            'researcherModel': 'mistral',
-            'criticModel': 'llama',
-            'editorModel': 'deepseek'
+            'researcherModel': 'searchgpt',
+            'criticModel': 'openai-reasoning',
+            'editorModel': 'claude-hybridspace'
         };
         
         // Apply defaults if available
@@ -46,6 +46,9 @@ async function populateModelOptions() {
                 element.value = defaultModel;
             }
         }
+        
+        // Dispatch event to notify that models have been loaded
+        document.dispatchEvent(new CustomEvent('models-loaded'));
         
         updateStatus("Models loaded successfully", "success");
     } catch (error) {
@@ -83,25 +86,91 @@ IMPORTANT INSTRUCTIONS:
 
 // Update the continueCollaboration function to add additional validation of responses
 async function continueCollaboration(initialMessage = null, isFirstMessage = false) {
-    // ...existing function code...
+    // Preserve existing function code
     
     try {
-        // ...existing prompt building code...
+        // Get the current worker
+        const workerKey = workerSequence[currentWorkerIndex];
+        const worker = workers[workerKey];
         
-        // Get the response
-        let response = await tryGenerateResponseWithFallback(prompt, worker.systemPrompt, worker.model(), workerKey);
-        
-        // Validate the response - make sure it's not HTML or too short
-        if (response.trim().startsWith('<!DOCTYPE') || response.trim().startsWith('<html')) {
-            throw new Error("Received HTML instead of a proper response");
+        if (!worker) {
+            throw new Error(`Worker ${workerKey} not found`);
         }
         
-        if (response.length < 20) {
-            throw new Error("Response is too short or empty");
+        // Show thinking indicator
+        const thinkingId = `thinking-${Date.now()}`;
+        addThinkingIndicator(worker.name, thinkingId);
+        
+        // Build prompt based on collaboration history
+        const historyText = formatCollaborationHistory();
+        const prompt = createWorkerPrompt(historyText, workerKey);
+        
+        // Get the response with fallback handling
+        let response;
+        try {
+            response = await tryGenerateResponseWithFallback(prompt, worker.systemPrompt, worker.model(), workerKey);
+            
+            // Validate the response - make sure it's not HTML or too short
+            if (response.trim().startsWith('<!DOCTYPE') || response.trim().startsWith('<html')) {
+                throw new Error("Received HTML instead of a proper response");
+            }
+            
+            if (response.length < 20) {
+                throw new Error("Response is too short or empty");
+            }
+        } catch (error) {
+            console.error(`Error generating response for ${workerKey}:`, error);
+            
+            // Show error animation if available
+            if (typeof showErrorAnimation === 'function') {
+                showErrorAnimation(workerKey, error, worker.model());
+            }
+            
+            // Use a fallback response
+            response = `Atsiprašau, bet nepavyko sugeneruoti atsakymo. Priežastis: ${error.message}. Bandykite dar kartą arba pasirinkite kitą modelį.`;
         }
         
-        // Continue with the rest of the function...
+        // Remove thinking indicator
+        removeThinkingIndicator(thinkingId);
+        
+        // Add the response to the chat log
+        addMessageToChatLog(worker.name, response, workerKey);
+        
+        // Update collaboration history
+        collaborationHistory.push({
+            role: worker.name,
+            content: response
+        });
+        
+        // Update progress
+        updateProgress();
+        
+        // Move to the next worker or finalize
+        const nextWorkerIndex = (currentWorkerIndex + 1) % workerSequence.length;
+        currentWorkerIndex = nextWorkerIndex;
+        
+        // If we've completed a full cycle, finalize or continue based on settings
+        if (nextWorkerIndex === 0) {
+            exchangeCount++;
+            
+            if (exchangeCount >= maxExchanges) {
+                // We've reached the maximum number of exchanges, finalize
+                finalizeCollaboration();
+            } else {
+                // Continue with another cycle after a delay
+                setTimeout(() => {
+                    continueCollaboration();
+                }, delayBetweenExchanges);
+            }
+        } else {
+            // Continue with the next worker immediately
+            continueCollaboration();
+        }
     } catch (error) {
-        // ...existing error handling code...
+        console.error("Error in continueCollaboration:", error);
+        updateStatus(`Error: ${error.message}`, "error");
+        
+        // Stop the collaboration on critical errors
+        stopCollaboration();
     }
 }

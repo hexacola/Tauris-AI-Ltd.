@@ -903,26 +903,33 @@ function setupBossPhrases() {
     }
 }
 
-// Setup boss phrases
-function setupBossPhrases() {
-    const bossElement = document.querySelector('.boss-speech');
-    
-    // Check if BossPhrases is available and use it properly
-    if (window.BossPhrases && bossElement) {
-        window.BossPhrases.scheduleBossPhrases(bossElement, 15000, false);
-    }
-}
-
 // Remove DeepSeek models from model selects - improved version
 function removeDeepSeekModels() {
     console.log('Removing DeepSeek models from select elements');
+    
+    // Add event listener to ensure this runs after models are loaded
+    document.addEventListener('models-loaded', function() {
+        const modelSelects = document.querySelectorAll('.model-select');
+        
+        modelSelects.forEach(select => {
+            Array.from(select.options).forEach(option => {
+                // Check if the option value or text contains "deepseek" (case insensitive)
+                if (option.value.toLowerCase().includes('deepseek') ||
+                    option.textContent.toLowerCase().includes('deepseek')) {
+                    console.log('Removing DeepSeek model:', option.value);
+                    select.removeChild(option);
+                }
+            });
+        });
+    });
+    
+    // Also run immediately in case models are already loaded
     const modelSelects = document.querySelectorAll('.model-select');
     
     modelSelects.forEach(select => {
-        // Convert to array to avoid live collection issues during removal
         Array.from(select.options).forEach(option => {
             // Check if the option value or text contains "deepseek" (case insensitive)
-            if (option.value.toLowerCase().includes('deepseek') || 
+            if (option.value.toLowerCase().includes('deepseek') ||
                 option.textContent.toLowerCase().includes('deepseek')) {
                 console.log('Removing DeepSeek model:', option.value);
                 select.removeChild(option);

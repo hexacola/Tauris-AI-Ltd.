@@ -58,6 +58,21 @@ class ApiHelper {
     }
     
     /**
+     * Check if a specific model is available
+     * @param {string} model - Model name to check
+     * @returns {Promise<boolean>} - Whether the model is available
+     */
+    static async isModelAvailable(model) {
+        try {
+            const models = await this.getAvailableModels();
+            return models.some(m => m.name === model);
+        } catch (error) {
+            console.error(`Error checking model availability:`, error);
+            return false;
+        }
+    }
+    
+    /**
      * Get available models
      * @returns {Promise<Array>} - List of models
      */

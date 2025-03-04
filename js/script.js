@@ -803,7 +803,7 @@ Tavo tekstas turėtų atitikti prašomo tipo tekstą (pvz., straipsnis, blogo į
             }
             
             // Check if the model supports internet access (for Gabija, the researcher)
-            const workerKey = getCurrentWorkerKey();
+            const workerKey = workerSequence[currentWorkerIndex];
             let canUseInternet = false;
             if(workerKey === "researcher") {
                 const selectedModel = document.getElementById("researcherModel").selectedOptions[0];
@@ -858,7 +858,7 @@ IMPORTANT INSTRUCTIONS:
                 }
 
                 // Add to our local tracking as well
-                const workerKey = getCurrentWorkerKey();
+                const workerKey = workerSequence[currentWorkerIndex];
                 if (workerKey) {
                     if (!failedModels[workerKey]) {
                         failedModels[workerKey] = {};
@@ -883,6 +883,14 @@ IMPORTANT INSTRUCTIONS:
     // Helper function to get current worker key
     function getCurrentWorkerKey() {
         return workerSequence[currentWorkerIndex];
+    }
+
+    /**
+     * Get the current worker index for progress calculation
+     * @returns {number} - Index of current worker (0-4)
+     */
+    function getCurrentWorkerIndex() {
+        return currentWorkerIndex;
     }
 
     // Modified addThinkingIndicator to use Lithuanian names
@@ -963,7 +971,7 @@ IMPORTANT INSTRUCTIONS:
         historyText += `ŠI YRA ${iterationNumber}-OJI ITERACIJA IŠ ${totalIterations}.\n\n`;
 
         // Determine if we're formatting for the boss or regular worker
-        const workerKey = getCurrentWorkerKey();
+        const workerKey = workerSequence[currentWorkerIndex];
         const isBoss = workerKey === 'boss' || finalWorker === workerKey;
         
         // Get completed worker cycles - this helps track how many full iterations we've gone through
@@ -1680,8 +1688,50 @@ function updateWorkerModel(workerKey, newModel) {
 }
 
 // Placeholder for functions that might be defined elsewhere
-function updateProgress() { /* Implementation */ }
-function setResultStatus() { /* Implementation */ }
-function showCompletedStamp() { /* Implementation */ }
+function updateProgress() { 
+    const progressBar = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    
+    if (!progressBar || !progressText) return;
+    
+    // Calculate progress based on current worker
+    const totalWorkers = workerSequence.length; // Use actual worker sequence length
+    const currentIndex = getCurrentWorkerIndex();
+    const progress = Math.min(Math.round((currentIndex / totalWorkers) * 100), 100);
+    
+    // Update UI
+    progressBar.style.width = `${progress}%`;
+    progressText.textContent = `${progress}%`;
+}
+
+function setResultStatus(status = '') {
+    const resultStatus = document.getElementById('resultStatus');
+    if (resultStatus) {
+        resultStatus.textContent = status ? `(${status})` : '';
+    }
+}
+
+function showCompletedStamp() {
+    // Add the completed stamp to the result
+    const resultContent = document.getElementById('finalResult');
+    if (resultContent) {
+        // Create stamp if it doesn't exist
+        let stamp = document.querySelector('.boss-approval-stamp');
+        if (!stamp) {
+            stamp = document.createElement('div');
+            stamp.className = 'boss-approval-stamp';
+            stamp.innerHTML = '<div class="boss-approval-animation">PATVIRTINTA</div>';
+            resultContent.appendChild(stamp);
+        }
+        
+        // Show the stamp with animation
+        stamp.classList.add('active');
+        
+        // Play stamp sound if available
+        if (typeof StampEffects !== 'undefined' && StampEffects.playStampSound) {
+            StampEffects.playStampSound();
+        }
+    }
+}
 
 });
