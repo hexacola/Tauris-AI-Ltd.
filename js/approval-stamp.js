@@ -16,6 +16,11 @@ class ApprovalStamp {
         
         // Add stamp styles
         this.addStampStyles();
+        
+        // Add additional event listener for boss completion
+        document.addEventListener('boss-completed-work', () => {
+            setTimeout(() => this.showStamp(), 500);
+        });
     }
     
     /**
@@ -130,7 +135,10 @@ class ApprovalStamp {
      */
     static showStamp() {
         const stamp = document.querySelector('.rubber-stamp');
-        if (!stamp) return;
+        if (!stamp) {
+            console.warn('Rubber stamp element not found');
+            return;
+        }
         
         // Reset animation if already displayed
         stamp.style.animation = 'none';
@@ -148,6 +156,9 @@ class ApprovalStamp {
         
         // Add confetti effect
         this.showCelebrationEffect();
+        
+        // Dispatch event that stamp has been shown
+        document.dispatchEvent(new CustomEvent('stamp-displayed'));
     }
     
     /**

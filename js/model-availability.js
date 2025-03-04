@@ -1,160 +1,111 @@
 /**
- * Class to monitor model availability and handle failures
+ * Tracks model availability and failures to provide fallbacks
  */
 class ModelAvailability {
-    constructor() {
-        this.failedModels = {};
-        this.modelPreferences = {
-            'openai-large': ['openai-reasoning', 'claude-hybridspace', 'gemini'],
-            'openai-reasoning': ['openai-large', 'gemini-thinking', 'claude-hybridspace'],
-            'gemini': ['gemini-thinking', 'openai-large', 'claude-hybridspace'],
-            'gemini-thinking': ['gemini', 'openai-reasoning', 'claude-hybridspace'],
-            'claude-hybridspace': ['openai-large', 'gemini', 'openai-reasoning'],
-            'searchgpt': ['openai-reasoning', 'openai-large', 'gemini']
-        };
+    // Store model status information
+    static modelStatus = {};
+    
+    // Models to try in order when a model fails
+    static fallbackOrder = [
+        'openai-large',
+        'openai-reasoning', 
+        'claude-hybridspace',
+        'gemini',
+        'gemini-thinking'
+    ];
+    
+    /**
+     * Mark a model as failed with error code
+     * @param {string} model - Model name
+     * @param {number} errorCode - HTTP error code
+     */
+    static markFailed(model, errorCode) {
+        if (!this.modelStatus[model]) {
+            this.modelStatus[model] = {
+                failures: 0,
+                lastError: null,
+                lastFailure: null,
+                blacklisted: false
+            };
+        }
         
-        // Attempts before blacklisting
-        this.failureThreshold = 3;
+        const status = this.modelStatus[model];
+        status.failures++;
+        status.lastError = errorCode;
+        status.lastFailure = Date.now();
         
-        // How long to blacklist a model (in milliseconds)
-        this.blacklistDuration = 5 * 60 * 1000; // 5 minutes
-        
-        // Load previous state from local storage if available
-        this.loadState();
+        // If 3 or more failures in short time, blacklist the model temporarily
+        if (status.failures >= 3) {
+            status.blacklisted = true;
+            console.warn(`Model ${model} blacklisted due to repeated failures`);
+            
+            // Auto-recover after 5 minutes
+            setTimeout(() => {
+                if (this.modelStatus[model]) {
+                    this.modelStatus[model].blacklisted = false;
+                    this.modelStatus[model].failures = 0;
+                    console.log(`Model ${model} removed from blacklist`);
+                }
+            }, 5 * 60 * 1000);
+        }
     }
     
     /**
      * Check if a model is available (not blacklisted)
+     * @param {string} model - Model name
+     * @returns {boolean} - Whether model is available
      */
-    isAvailable(model) {
-        if (!this.failedModels[model]) return true;
-        
-        // Check if the blacklist period has expired
-        const now = Date.now();
-        if (now - this.failedModels[model].timestamp > this.blacklistDuration) {
-            // Model's blacklist period has expired, make it available again
-            delete this.failedModels[model];
-            this.saveState();
-            return true;
-        }
-        
-        return false;
+    static isAvailable(model) {
+        return !this.modelStatus[model]?.blacklisted;
     }
     
     /**
-     * Mark a model as failed
+     * Find alternative model if primary is unavailable
+     * @param {string} model - Current model
+     * @returns {string|null} - Alternative model or null
      */
-    markFailed(model, errorCode = null) {
-        if (!this.failedModels[model]) {
-            this.failedModels[model] = {
-                count: 0,
-                timestamp: Date.now(),
-                errorCodes: []
+    static findAlternative(model) {
+        // If model is available, no need for alternative
+        if (this.isAvailable(model)) {
+            return model;
+        }
+        
+        // Find first available model from fallback order
+        for (const fallbackModel of this.fallbackOrder) {
+            if (fallbackModel !== model && this.isAvailable(fallbackModel)) {
+                return fallbackModel;
+            }
+        }
+        
+        // If all models in fallback order are blacklisted, reset blacklist
+        // and return the original model as last resort
+        for (const modelName in this.modelStatus) {
+            if (this.modelStatus[modelName].blacklisted) {
+                console.log(`Emergency reset of blacklist for ${modelName}`);
+                this.modelStatus[modelName].blacklisted = false;
+                this.modelStatus[modelName].failures = 0;
+            }
+        }
+        
+        return model; // Return original as last resort
+    }
+    
+    /**
+     * Get health status of all tracked models
+     * @returns {Object} - Model health information
+     */
+    static getHealthStatus() {
+        const status = {};
+        for (const model in this.modelStatus) {
+            status[model] = {
+                available: this.isAvailable(model),
+                failures: this.modelStatus[model].failures,
+                lastFailure: this.modelStatus[model].lastFailure
             };
         }
-        
-        this.failedModels[model].count++;
-        if (errorCode) {
-            this.failedModels[model].errorCodes.push(errorCode);
-        }
-        
-        // Update timestamp
-        this.failedModels[model].timestamp = Date.now();
-        
-        // If failures exceed threshold, emit an event
-        if (this.failedModels[model].count >= this.failureThreshold) {
-            this.blacklistModel(model);
-        }
-        
-        // Save state to local storage
-        this.saveState();
-    }
-    
-    /**
-     * Blacklist a model and notify application
-     */
-    blacklistModel(model) {
-        console.warn(`Model ${model} has been blacklisted after ${this.failedModels[model].count} failures`);
-        
-        // Dispatch event for the application to respond
-        const event = new CustomEvent('model-blacklisted', {
-            detail: {
-                model: model,
-                failures: this.failedModels[model].count,
-                errorCodes: this.failedModels[model].errorCodes
-            }
-        });
-        
-        document.dispatchEvent(event);
-    }
-    
-    /**
-     * Find an alternative model when one is blacklisted
-     */
-    findAlternative(model) {
-        // If model isn't blacklisted, use it
-        if (this.isAvailable(model)) return model;
-        
-        // Get alternatives in preference order
-        const alternatives = this.modelPreferences[model] || [];
-        
-        // Find first available alternative
-        for (const alt of alternatives) {
-            if (this.isAvailable(alt)) {
-                return alt;
-            }
-        }
-        
-        // If no alternatives, use first model in our preference list that's available
-        const allModels = Object.keys(this.modelPreferences);
-        for (const potential of allModels) {
-            if (this.isAvailable(potential)) {
-                return potential;
-            }
-        }
-        
-        // If all else fails, return the original model
-        // This forces the system to try it, even though it might fail
-        console.warn(`No available alternative models found. Defaulting to original model ${model}`);
-        return model;
-    }
-    
-    /**
-     * Save the current state to localStorage
-     */
-    saveState() {
-        try {
-            localStorage.setItem('modelAvailability', JSON.stringify({
-                failedModels: this.failedModels,
-                timestamp: Date.now()
-            }));
-        } catch (e) {
-            console.warn('Failed to save model availability state to localStorage:', e);
-        }
-    }
-    
-    /**
-     * Load state from localStorage
-     */
-    loadState() {
-        try {
-            const saved = localStorage.getItem('modelAvailability');
-            if (saved) {
-                const data = JSON.parse(saved);
-                
-                // Only use saved data if it's less than 30 minutes old
-                if (data && data.timestamp && (Date.now() - data.timestamp) < 30 * 60 * 1000) {
-                    this.failedModels = data.failedModels || {};
-                } else {
-                    // Clear expired data
-                    localStorage.removeItem('modelAvailability');
-                }
-            }
-        } catch (e) {
-            console.warn('Failed to load model availability state:', e);
-        }
+        return status;
     }
 }
 
-// Initialize and export
-window.ModelAvailability = new ModelAvailability();
+// Make globally available
+window.ModelAvailability = ModelAvailability;

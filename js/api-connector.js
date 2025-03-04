@@ -101,6 +101,11 @@ class ApiConnector {
                 // Handle response based on content type
                 const responseText = await response.text();
                 
+                // Check if the response is empty
+                if (!responseText.trim()) {
+                    throw new Error("Empty response received from API");
+                }
+                
                 if (contentType.includes('application/json')) {
                     try {
                         const data = JSON.parse(responseText);
@@ -118,7 +123,7 @@ class ApiConnector {
                     } catch (jsonParseError) {
                         console.warn(`Response claimed to be JSON but couldn't parse: ${jsonParseError.message}`);
                         // Fallback to text if it looks valid
-                        if (responseText.includes("As the") || responseText.includes("I've")) {
+                        if (responseText.includes("As the") || responseText.includes("I've") || responseText.length > 50) {
                             return responseText;
                         }
                         throw new Error(`Invalid JSON response: ${jsonParseError.message}`);

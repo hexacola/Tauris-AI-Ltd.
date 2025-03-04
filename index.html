@@ -215,7 +215,7 @@
         </div>
         
         <div class="final-result">
-            <div class="result-header"></div>
+            <div class="result-header">
                 <h2>Galutinis rezultatas <span id="resultStatus">(Darbas vyksta...)</span></h2>
             </div>
             <div id="finalResult" class="result-content"></div>
@@ -228,6 +228,7 @@
                 <div class="easter-egg-text">Sėkmingai baigus darbą, visi darbuotojai gaus cepelinų!</div>
             </div>
         </div>
+        
         <footer class="office-footer">
             <div class="footer-content">
                 <p>© 2025 Tauris AI Ltd. - "Kur dirbtinis intelektas kalba lietuviškai ir dirba už cepelinų pietūs"</p>
@@ -320,25 +321,27 @@
         });
     });
     </script>
-    <!-- Add the intro-animation.js script near the top of script loading -->
-    <script defer src="js/intro-animation.js"></script>
     
-    <!-- Load boss-phrases.js first -->
-    <script defer src="js/boss-phrases.js"></script>
-
-    <!-- Add these script tags before your main application script -->
-    <script defer src="js/retry-handler.js"></script>
-    <script defer src="js/pollinations-api-client.js"></script>
-
-    <!-- Then load other scripts -->
-    <script defer src="js/model-availability.js"></script>
-    <script defer src="js/api-connector.js"></script>
-    <script defer src="js/api-helper.js"></script>
-    <script defer src="js/error-fix.js"></script>
+    <!-- Load core functionality first -->
     <script defer src="js/cors-proxy.js"></script>
+    <script defer src="js/api-helper.js"></script>
+    <script defer src="js/api-connector.js"></script>
+    
+    <!-- Then load UI components -->
+    <script defer src="js/intro-animation.js"></script>
+    <script defer src="js/boss-phrases.js"></script>
     <script defer src="js/error-animations.js"></script>
+    <script defer src="js/document-formatter.js"></script>
+    <script defer src="js/approval-stamp.js"></script>
+    
+    <!-- Load utility and support scripts -->
+    <script defer src="js/retry-handler.js"></script>
+    <script defer src="js/model-availability.js"></script>
+    <script defer src="js/error-fix.js"></script>
     <script defer src="js/verification.js"></script>
     <script defer src="js/api-test.js"></script>
+    
+    <!-- Load application scripts last -->
     <script defer src="js/script.js"></script>
     <script defer src="js/lithuanian-extras.js"></script>
     <script defer src="js/stamp-effects.js"></script>
@@ -346,6 +349,6 @@
     <script defer src="js/lietuviskas-thinking.js"></script>
     <script defer src="js/feedback-system.js"></script>
     <script defer src="js/outputFormatting.js"></script>
-    <script defer src="js/document-formatter.js"></script>
+    <script defer src="js/pollinations-api-client.js"></script>
 </body>
 </html>

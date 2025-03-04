@@ -29,7 +29,10 @@ class CorsProxy {
      */
     static getActiveProxy() {
         const active = this.PROXIES.filter(p => p.active);
-        if (active.length === 0) return null;
+        if (active.length === 0) {
+            console.warn("No active CORS proxies available");
+            return null;
+        }
         return active[Math.floor(Math.random() * active.length)].url;
     }
     
@@ -41,7 +44,13 @@ class CorsProxy {
      */
     static async fetch(url, options = {}) {
         try {
-            const proxyUrl = this.getActiveProxy() + encodeURIComponent(url);
+            const proxyUrl = this.getActiveProxy();
+            
+            if (!proxyUrl) {
+                throw new Error("No active CORS proxy available");
+            }
+            
+            const fullProxyUrl = proxyUrl + encodeURIComponent(url);
             console.log(`Using CORS proxy for: ${url}`);
             
             // Add CORS headers to request options
@@ -53,7 +62,7 @@ class CorsProxy {
                 }
             };
             
-            return await fetch(proxyUrl, modifiedOptions);
+            return await fetch(fullProxyUrl, modifiedOptions);
         } catch (error) {
             console.error("Error using CORS proxy:", error);
             throw error;
